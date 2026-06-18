@@ -1,15 +1,12 @@
 #include "Schedule.h"
 using namespace std;
 
-Schedule::Schedule(const string& pID, const string& sID,
-                   const string& dest, const string& time)
-    : passengerID(pID), shuttleID(sID), destination(dest), scheduledTime(time) {
+Schedule::Schedule(const Passenger* passenger, const ShuttleVehicle* shuttle)
+    : assignPassenger(passenger), assignShuttle(shuttle) {
 }
 
-const string& Schedule::getPassengerID() const { return passengerID; }
-const string& Schedule::getShuttleID() const { return shuttleID; }
-const string& Schedule::getDestination() const { return destination; }
-const string& Schedule::getScheduledTime() const { return scheduledTime; }
+const Passenger* Schedule::getPassenger() const { return assignPassenger; }
+const ShuttleVehicle* Schedule::getShuttle() const { return assignShuttle; }
 
 PassengerList& ScheduleList::getPassengerRegistry() { return passengerRegistry; }
 ShuttleList& ScheduleList::getShuttleRegistry() { return shuttleRegistry; }
@@ -32,7 +29,7 @@ void ScheduleList::generateSchedules() {
                 if (p.getDestination() == s.getDestination() && p.getScheduledTime() == s.getScheduledTime()) {
                     p.setAssignedStatus(true);
                     s.setAssignedStatus(true);
-                    activeSchedules.emplace_back(p.getID(), s.getID(), p.getDestination(), p.getScheduledTime());
+                    activeSchedules.emplace_back(&p, &s);
                     break;
                 }
             }

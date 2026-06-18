@@ -53,6 +53,8 @@ public:
     T& operator[](size_t index) { return items[index]; }
     const T& operator[](size_t index) const { return items[index]; }
 
+    void clear() { items.clear(); }
+
     void resetAssignments() {
         for (auto& item : items) {
             item.setAssignedStatus(false);

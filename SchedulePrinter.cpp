@@ -3,10 +3,12 @@
 using namespace std;
 
 void SchedulePrinter::printSchedule(const Schedule& schedule) {
-    cout << "[MATCHED] " << schedule.getPassengerID()
-         << " <---> " << schedule.getShuttleID()
-         << " | Dest: " << schedule.getDestination()
-         << " | Time: " << schedule.getScheduledTime() << "\n";
+    if (schedule.getPassenger() && schedule.getShuttle()) {
+        cout << "[MATCHED] " << schedule.getPassenger()->getID()
+             << " <---> " << schedule.getShuttle()->getID()
+             << " | Dest: " << schedule.getPassenger()->getDestination()
+             << " | Time: " << schedule.getPassenger()->getScheduledTime() << "\n";
+    }
 }
 
 void SchedulePrinter::printActiveSchedules(const vector<Schedule>& activeSchedules) {

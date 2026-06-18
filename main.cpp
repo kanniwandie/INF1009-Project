@@ -3,6 +3,7 @@
 #include "ScheduleStorage.h"
 #include "MenuController.h"
 #include <iostream>
+#include <limits>
 using namespace std;
 
 int main() {
@@ -11,18 +12,24 @@ int main() {
     ShuttleList& sReg = systemScheduler.getShuttleRegistry();
 
     cout << "=== Welcome Route-Planner Application ===\n";
-    MenuController::loadDataFiles(pReg, sReg);
+
+    string folder;
+    cout << "Enter folder path (or press Enter for current directory): ";
+    getline(cin, folder);
+    MenuController::loadDataFiles(pReg, sReg, folder);
 
     int menuChoice = 0;
-    while (menuChoice != 5) {
+    while (menuChoice != 7) {
         cout << "\n================ MAIN MENU ================\n"
              << "1. Compute and Display Match Schedules\n"
              << "2. Display Unassigned Entities\n"
              << "3. Save Computed Schedules to Archive\n"
              << "4. Manage RAM Local Parameters (Add/Edit/Delete)\n"
-             << "5. Exit Application\n"
+             << "5. Display All Data\n"
+             << "6. Reload Data Files\n"
+             << "7. Exit Application\n"
              << "Selection: ";
-        cin >> menuChoice;
+        menuChoice = MenuController::getMenuChoice(1, 7);
 
         switch (menuChoice) {
         case 1:
@@ -36,11 +43,7 @@ int main() {
             string filename;
             cout << "Enter filename to archive output (e.g., final_run.txt): ";
             cin >> filename;
-            if (ScheduleStorage::saveSchedules(filename, systemScheduler.getActiveSchedules())) {
-                cout << "Archive saved successfully.\n";
-            } else {
-                cerr << "Error creating archive file.\n";
-            }
+            ScheduleStorage::saveSchedules(filename, systemScheduler.getActiveSchedules());
             break;
         }
         case 4:
@@ -48,10 +51,18 @@ int main() {
             MenuController::handleDataManagementMenu(pReg, sReg);
             break;
         case 5:
+            MenuController::displayAllData(pReg, sReg);
+            break;
+        case 6: {
+            cout << "Enter folder path (or press Enter for current directory): ";
+            getline(cin, folder);
+            systemScheduler.clearSchedules();
+            MenuController::loadDataFiles(pReg, sReg, folder);
+            break;
+        }
+        case 7:
             cout << "Closing scheduling system. Memory cleared.\n";
             break;
-        default:
-            cout << "Invalid entry. Try again.\n";
         }
     }
     return 0;

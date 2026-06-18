@@ -13,19 +13,14 @@ class ShuttleList : public Registry<ShuttleVehicle> {};
 
 class Schedule {
 private:
-    string passengerID;
-    string shuttleID;
-    string destination;
-    string scheduledTime;
+    const Passenger* assignPassenger;
+    const ShuttleVehicle* assignShuttle;
 
 public:
-    Schedule(const string& pID, const string& sID,
-             const string& dest, const string& time);
+    Schedule(const Passenger* passenger, const ShuttleVehicle* shuttle);
 
-    const string& getPassengerID() const;
-    const string& getShuttleID() const;
-    const string& getDestination() const;
-    const string& getScheduledTime() const;
+    const Passenger* getPassenger() const;
+    const ShuttleVehicle* getShuttle() const;
 };
 
 class ScheduleList {

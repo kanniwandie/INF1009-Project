@@ -2,34 +2,62 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <limits>
 using namespace std;
 
-void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg) {
-    string defaultPassengerFile = "passenger.txt";
-    string defaultShuttleFile = "shuttle.txt";
+static string buildFilePath(const string& folder, const string& defaultName) {
+    if (folder.empty()) return defaultName;
+    if (folder.back() == '/' || folder.back() == '\\') return folder + defaultName;
+    return folder + "/" + defaultName;
+}
 
-    ifstream pFile(defaultPassengerFile);
-    if (!pFile.is_open()) {
-        cout << "[Notice] 'passenger.txt' not found in the project folder.\n";
-        cout << "Enter the specific file path or folder path for the passenger file: ";
+static bool openDataFile(ifstream& file, const string& defaultName, const string& label) {
+    if (!file.is_open()) {
+        cout << "[Notice] '" << defaultName << "' not found.\n";
+        cout << "Enter file path for " << label << " file: ";
         string userPath;
         cin >> userPath;
-
         if (userPath.find(".txt") == string::npos) {
             if (!userPath.empty() && userPath.back() != '/' && userPath.back() != '\\') {
                 userPath += "/";
             }
-            userPath += "passenger.txt";
+            userPath += defaultName;
         }
-        pFile.open(userPath);
+        file.open(userPath);
     }
+    return file.is_open();
+}
 
-    if (pFile.is_open()) {
+string MenuController::trim(const string& s) {
+    size_t start = s.find_first_not_of(" \t");
+    if (start == string::npos) return "";
+    size_t end = s.find_last_not_of(" \t");
+    return s.substr(start, end - start + 1);
+}
+
+int MenuController::getMenuChoice(int min, int max) {
+    int choice;
+    while (!(cin >> choice) || choice < min || choice > max) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid input. Enter a number between " << min << " and " << max << ": ";
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    return choice;
+}
+
+void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg, const string& folder) {
+    pReg.clear();
+    sReg.clear();
+
+    string pPath = buildFilePath(folder, "passenger.txt");
+    ifstream pFile(pPath);
+    if (openDataFile(pFile, "passenger.txt", "passenger")) {
         string line, id, dest, time;
         while (getline(pFile, line)) {
             stringstream ss(line);
             if (getline(ss, id, ',') && getline(ss, dest, ',') && getline(ss, time, ',')) {
-                pReg.add(Passenger(id, dest, time));
+                pReg.add(Passenger(trim(id), trim(dest), trim(time)));
             }
         }
         cout << "[RAM Storage] Successfully loaded passengers into memory.\n\n";
@@ -38,28 +66,14 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg) {
         cout << "[Warning] Could not locate or open passenger data. Starting with empty storage.\n\n";
     }
 
-    ifstream sFile(defaultShuttleFile);
-    if (!sFile.is_open()) {
-        cout << "[Notice] 'shuttle.txt' not found in the project folder.\n";
-        cout << "Enter the specific file path or folder path for the shuttle file: ";
-        string userPath;
-        cin >> userPath;
-
-        if (userPath.find(".txt") == string::npos) {
-            if (!userPath.empty() && userPath.back() != '/' && userPath.back() != '\\') {
-                userPath += "/";
-            }
-            userPath += "shuttle.txt";
-        }
-        sFile.open(userPath);
-    }
-
-    if (sFile.is_open()) {
+    string sPath = buildFilePath(folder, "shuttle.txt");
+    ifstream sFile(sPath);
+    if (openDataFile(sFile, "shuttle.txt", "shuttle")) {
         string line, id, chargingPoint, time;
         while (getline(sFile, line)) {
             stringstream ss(line);
             if (getline(ss, id, ',') && getline(ss, chargingPoint, ',') && getline(ss, time, ',')) {
-                sReg.add(ShuttleVehicle(id, chargingPoint, time));
+                sReg.add(ShuttleVehicle(trim(id), trim(chargingPoint), trim(time)));
             }
         }
         cout << "[RAM Storage] Successfully loaded shuttles into memory.\n\n";
@@ -81,6 +95,7 @@ void MenuController::editPassenger(PassengerList& pReg) {
         cin >> newDest >> newTime;
         p->setDestination(newDest);
         p->setScheduledTime(newTime);
+        pReg.resetAssignments();
         cout << "[RAM Storage] Passenger updated successfully in-place.\n";
     } else {
         cout << "Passenger ID not found in RAM.\n";
@@ -99,6 +114,7 @@ void MenuController::editShuttle(ShuttleList& sReg) {
         cin >> newPoint >> newTime;
         s->setDestination(newPoint);
         s->setScheduledTime(newTime);
+        sReg.resetAssignments();
         cout << "[RAM Storage] Shuttle updated successfully in-place.\n";
     } else {
         cout << "Shuttle ID not found in RAM.\n";
@@ -117,7 +133,7 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
              << "6. Delete Shuttle\n"
              << "7. Back to Main Menu\n"
              << "Selection: ";
-        cin >> choice;
+        choice = getMenuChoice(1, 7);
 
         string id, dest, time;
         switch (choice) {
@@ -125,12 +141,14 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
             cout << "Enter ID, Destination, and Time (separated by spaces): ";
             cin >> id >> dest >> time;
             pReg.add(Passenger(id, dest, time));
+            pReg.resetAssignments();
             cout << "Passenger added to RAM.\n";
             break;
         case 2:
             cout << "Enter ID, Charging Point, and Time (separated by spaces): ";
             cin >> id >> dest >> time;
             sReg.add(ShuttleVehicle(id, dest, time));
+            sReg.resetAssignments();
             cout << "Shuttle added to RAM.\n";
             break;
         case 3: editPassenger(pReg); break;
@@ -138,17 +156,44 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
         case 5:
             cout << "Enter Passenger ID to remove: ";
             cin >> id;
-            if (pReg.remove(id)) cout << "Removed from RAM.\n";
-            else cout << "ID not found.\n";
+            if (pReg.remove(id)) {
+                pReg.resetAssignments();
+                cout << "Removed from RAM.\n";
+            } else {
+                cout << "ID not found.\n";
+            }
             break;
         case 6:
             cout << "Enter Shuttle ID to remove: ";
             cin >> id;
-            if (sReg.remove(id)) cout << "Removed from RAM.\n";
-            else cout << "ID not found.\n";
+            if (sReg.remove(id)) {
+                sReg.resetAssignments();
+                cout << "Removed from RAM.\n";
+            } else {
+                cout << "ID not found.\n";
+            }
             break;
         case 7: break;
-        default: cout << "Invalid selection.\n";
+        }
+    }
+}
+
+void MenuController::displayAllData(const PassengerList& pReg, const ShuttleList& sReg) {
+    cout << "\n=== ALL PASSENGERS ===\n";
+    if (pReg.size() == 0) {
+        cout << "No passengers loaded.\n";
+    } else {
+        for (size_t i = 0; i < pReg.size(); ++i) {
+            cout << pReg[i].getDescription() << "\n";
+        }
+    }
+
+    cout << "\n=== ALL SHUTTLES ===\n";
+    if (sReg.size() == 0) {
+        cout << "No shuttles loaded.\n";
+    } else {
+        for (size_t i = 0; i < sReg.size(); ++i) {
+            cout << sReg[i].getDescription() << "\n";
         }
     }
 }

@@ -2,16 +2,17 @@
 #define MENU_CONTROLLER_H
 
 #include "Schedule.h"
+#include <string>
+using namespace std;
 
 class MenuController {
 public:
-    // Handles reading the folder path and parsing the files into RAM 
-    static void loadDataFiles(PassengerList& pReg, ShuttleList& sReg);
-
-    // Handles the CRUD interface operations
+    static void loadDataFiles(PassengerList& pReg, ShuttleList& sReg, const string& folder = "");
     static void handleDataManagementMenu(PassengerList& pReg, ShuttleList& sReg);
+    static void displayAllData(const PassengerList& pReg, const ShuttleList& sReg);
+    static int getMenuChoice(int min, int max);
+    static string trim(const string& s);
 private:
-    // Internal helpers
     static void editPassenger(PassengerList& pReg);
     static void editShuttle(ShuttleList& sReg);
 };
