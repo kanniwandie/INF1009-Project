@@ -3,6 +3,7 @@
 
 #include "Schedule.h"
 #include <vector>
+using namespace std;
 
 class SchedulePrinter {
 public:

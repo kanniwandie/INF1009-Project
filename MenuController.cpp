@@ -2,22 +2,19 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
 using namespace std;
 
 void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg) {
     string defaultPassengerFile = "passenger.txt";
     string defaultShuttleFile = "shuttle.txt";
 
-    // Loading Passengers from project folder
     ifstream pFile(defaultPassengerFile);
     if (!pFile.is_open()) {
-        cout << "[Notice] 'passengers.txt' not found in the project folder.\n";
+        cout << "[Notice] 'passenger.txt' not found in the project folder.\n";
         cout << "Enter the specific file path or folder path for the passenger file: ";
         string userPath;
         cin >> userPath;
 
-        // If the user provided a directory path rather than a direct filename, append it
         if (userPath.find(".txt") == string::npos) {
             if (!userPath.empty() && userPath.back() != '/' && userPath.back() != '\\') {
                 userPath += "/";
@@ -37,15 +34,13 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg) {
         }
         cout << "[RAM Storage] Successfully loaded passengers into memory.\n\n";
         pFile.close();
-    }
-    else {
+    } else {
         cout << "[Warning] Could not locate or open passenger data. Starting with empty storage.\n\n";
     }
 
-    //Loading Shuttles from project folder
     ifstream sFile(defaultShuttleFile);
     if (!sFile.is_open()) {
-        cout << "[Notice] 'shuttles.txt' not found in the project folder.\n";
+        cout << "[Notice] 'shuttle.txt' not found in the project folder.\n";
         cout << "Enter the specific file path or folder path for the shuttle file: ";
         string userPath;
         cin >> userPath;
@@ -69,33 +64,27 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg) {
         }
         cout << "[RAM Storage] Successfully loaded shuttles into memory.\n\n";
         sFile.close();
-    }
-    else {
+    } else {
         cout << "[Warning] Could not locate or open shuttle data. Starting with empty storage.\n\n";
     }
 }
+
 void MenuController::editPassenger(PassengerList& pReg) {
     string id, newDest, newTime;
     cout << "Enter Passenger ID to edit: ";
     cin >> id;
 
-    bool found = false;
-    // Using an explicit reference loop (auto&) to modify the elements directly inside the vector RAM
-    for (auto& p : pReg.getModifiableItems()) {
-        if (p.getID() == id) {
-            cout << "Found Passenger " << id << " currently bound to Destination: "
-                << p.getDestination() << " | Time: " << p.getScheduledTime() << "\n";
-            cout << "Enter New Destination and New Time (separated by space): ";
-            cin >> newDest >> newTime;
-
-            p.setDestination(newDest);
-            p.setScheduledTime(newTime);
-            cout << "[RAM Storage] Passenger updated successfully in-place.\n";
-            found = true;
-            break;
-        }
+    Passenger* p = pReg.findById(id);
+    if (p) {
+        cout << "Found " << p->getDescription() << "\n";
+        cout << "Enter New Destination and New Time (separated by space): ";
+        cin >> newDest >> newTime;
+        p->setDestination(newDest);
+        p->setScheduledTime(newTime);
+        cout << "[RAM Storage] Passenger updated successfully in-place.\n";
+    } else {
+        cout << "Passenger ID not found in RAM.\n";
     }
-    if (!found) cout << "Passenger ID not found in RAM.\n";
 }
 
 void MenuController::editShuttle(ShuttleList& sReg) {
@@ -103,37 +92,31 @@ void MenuController::editShuttle(ShuttleList& sReg) {
     cout << "Enter Shuttle ID to edit: ";
     cin >> id;
 
-    bool found = false;
-    // Using an explicit reference loop (auto&) to modify the elements directly inside the vector RAM
-    for (auto& s : sReg.getModifiableItems()) {
-        if (s.getID() == id) {
-            cout << "Found Shuttle " << id << " currently bound to Charging Point: "
-                << s.getDestination() << " | Time: " << s.getScheduledTime() << "\n";
-            cout << "Enter New Charging Point and New Time (separated by space): ";
-            cin >> newPoint >> newTime;
-
-            s.setDestination(newPoint);
-            s.setScheduledTime(newTime);
-            cout << "[RAM Storage] Shuttle updated successfully in-place.\n";
-            found = true;
-            break;
-        }
+    ShuttleVehicle* s = sReg.findById(id);
+    if (s) {
+        cout << "Found " << s->getDescription() << "\n";
+        cout << "Enter New Charging Point and New Time (separated by space): ";
+        cin >> newPoint >> newTime;
+        s->setDestination(newPoint);
+        s->setScheduledTime(newTime);
+        cout << "[RAM Storage] Shuttle updated successfully in-place.\n";
+    } else {
+        cout << "Shuttle ID not found in RAM.\n";
     }
-    if (!found) cout << "Shuttle ID not found in RAM.\n";
 }
 
 void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& sReg) {
     int choice = 0;
     while (choice != 7) {
         cout << "\n--- RAM Local Data Storage Management ---\n"
-            << "1. Add Passenger\n"
-            << "2. Add Shuttle\n"
-            << "3. Edit Passenger Parameters\n"
-            << "4. Edit Shuttle Parameters\n"
-            << "5. Delete Passenger\n"
-            << "6. Delete Shuttle\n"
-            << "7. Back to Main Menu\n"
-            << "Selection: ";
+             << "1. Add Passenger\n"
+             << "2. Add Shuttle\n"
+             << "3. Edit Passenger Parameters\n"
+             << "4. Edit Shuttle Parameters\n"
+             << "5. Delete Passenger\n"
+             << "6. Delete Shuttle\n"
+             << "7. Back to Main Menu\n"
+             << "Selection: ";
         cin >> choice;
 
         string id, dest, time;
@@ -150,12 +133,8 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
             sReg.add(ShuttleVehicle(id, dest, time));
             cout << "Shuttle added to RAM.\n";
             break;
-        case 3:
-            editPassenger(pReg);
-            break;
-        case 4:
-            editShuttle(sReg);
-            break;
+        case 3: editPassenger(pReg); break;
+        case 4: editShuttle(sReg); break;
         case 5:
             cout << "Enter Passenger ID to remove: ";
             cin >> id;
@@ -168,10 +147,8 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
             if (sReg.remove(id)) cout << "Removed from RAM.\n";
             else cout << "ID not found.\n";
             break;
-        case 7:
-            break;
-        default:
-            cout << "Invalid selection.\n";
+        case 7: break;
+        default: cout << "Invalid selection.\n";
         }
     }
 }

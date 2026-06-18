@@ -2,11 +2,10 @@
 #define ENTITY_H
 
 #include <string>
-
 using namespace std;
 
 class Entity {
-private:
+protected:
     string id;
     string destination;
     string scheduledTime;
@@ -21,6 +20,9 @@ public:
     string getID() const;
     string getDestination() const;
     string getScheduledTime() const;
+
+    virtual string getType() const = 0;
+    virtual string getDescription() const;
 };
 
 #endif

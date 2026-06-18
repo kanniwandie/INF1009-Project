@@ -1,9 +1,10 @@
 #ifndef REGISTRY_H
 #define REGISTRY_H
-// For template class, both the definition and implementation must remain in the header file so the compiler can instantiate it properly
+
 #include <vector>
 #include <string>
 #include <algorithm>
+using namespace std;
 
 template <typename T>
 class Registry {
@@ -21,7 +22,7 @@ public:
     bool remove(const string& id) {
         auto it = remove_if(items.begin(), items.end(), [&id](const T& item) {
             return item.getID() == id;
-            });
+        });
         if (it != items.end()) {
             items.erase(it, items.end());
             return true;
@@ -33,9 +34,24 @@ public:
         return items;
     }
 
-    vector<T>& getModifiableItems() {
-        return items;
+    T* findById(const string& id) {
+        for (auto& item : items) {
+            if (item.getID() == id) return &item;
+        }
+        return nullptr;
     }
+
+    const T* findById(const string& id) const {
+        for (const auto& item : items) {
+            if (item.getID() == id) return &item;
+        }
+        return nullptr;
+    }
+
+    size_t size() const { return items.size(); }
+
+    T& operator[](size_t index) { return items[index]; }
+    const T& operator[](size_t index) const { return items[index]; }
 
     void resetAssignments() {
         for (auto& item : items) {

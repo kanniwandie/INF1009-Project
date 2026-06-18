@@ -5,23 +5,27 @@
 #include "ShuttleVehicle.h"
 #include "Registry.h"
 #include <vector>
+#include <string>
+using namespace std;
 
 class PassengerList : public Registry<Passenger> {};
 class ShuttleList : public Registry<ShuttleVehicle> {};
 
 class Schedule {
 private:
-    Passenger* assignPassenger;
-    ShuttleVehicle* assignShuttle;
+    string passengerID;
+    string shuttleID;
+    string destination;
+    string scheduledTime;
 
 public:
-    Schedule(Passenger* passenger, ShuttleVehicle* shuttle, bool assigned);
-    Schedule(const Schedule& other);
-    Schedule& operator=(const Schedule& other);
-    ~Schedule() = default;
+    Schedule(const string& pID, const string& sID,
+             const string& dest, const string& time);
 
-    const Passenger* getPassenger() const;
-    const ShuttleVehicle* getShuttle() const;
+    const string& getPassengerID() const;
+    const string& getShuttleID() const;
+    const string& getDestination() const;
+    const string& getScheduledTime() const;
 };
 
 class ScheduleList {
@@ -38,6 +42,7 @@ public:
     const vector<Schedule>& getActiveSchedules() const;
 
     void generateSchedules();
+    void clearSchedules();
 };
 
 #endif

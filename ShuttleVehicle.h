@@ -1,7 +1,9 @@
-#ifndef SHUTTLE_VEHICLES_H
-#define SHUTTLE_VEHICLES_H
+#ifndef SHUTTLE_VEHICLE_H
+#define SHUTTLE_VEHICLE_H
 
 #include "DriverlessVehicle.h"
+#include <string>
+using namespace std;
 
 class ShuttleVehicle : public DriverlessVehicle {
 private:
@@ -13,6 +15,9 @@ public:
 
     void setAssignedStatus(bool status);
     bool getAssignedStatus() const;
+
+    string getType() const override;
+    string getDescription() const override;
 };
 
 #endif

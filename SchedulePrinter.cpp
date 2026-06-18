@@ -1,15 +1,12 @@
 #include "SchedulePrinter.h"
 #include <iostream>
-
 using namespace std;
 
 void SchedulePrinter::printSchedule(const Schedule& schedule) {
-    if (schedule.getPassenger() && schedule.getShuttle()) {
-        cout << "[MATCHED] Pass: " << schedule.getPassenger()->getID()
-            << " <---> Shuttle: " << schedule.getShuttle()->getID()
-            << " | Dest: " << schedule.getPassenger()->getDestination()
-            << " | Time: " << schedule.getPassenger()->getScheduledTime() << "\n";
-    }
+    cout << "[MATCHED] " << schedule.getPassengerID()
+         << " <---> " << schedule.getShuttleID()
+         << " | Dest: " << schedule.getDestination()
+         << " | Time: " << schedule.getScheduledTime() << "\n";
 }
 
 void SchedulePrinter::printActiveSchedules(const vector<Schedule>& activeSchedules) {
@@ -28,7 +25,7 @@ void SchedulePrinter::printUnassignedEntities(const PassengerList& pList, const 
     bool elementsFound = false;
     for (const auto& p : pList.getItems()) {
         if (!p.getAssignedStatus()) {
-            cout << "Passenger: " << p.getID() << " | Dest: " << p.getDestination() << " | Time: " << p.getScheduledTime() << "\n";
+            cout << p.getDescription() << "\n";
             elementsFound = true;
         }
     }
@@ -38,7 +35,7 @@ void SchedulePrinter::printUnassignedEntities(const PassengerList& pList, const 
     elementsFound = false;
     for (const auto& s : sList.getItems()) {
         if (!s.getAssignedStatus()) {
-            cout << "Vehicle: " << s.getID() << " | Dest: " << s.getDestination() << " | Time: " << s.getScheduledTime() << "\n";
+            cout << s.getDescription() << "\n";
             elementsFound = true;
         }
     }
