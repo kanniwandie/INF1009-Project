@@ -1,0 +1,12 @@
+P01,Supermarket,8:05am
+P02,Residential_01,9:35pm
+P03,School,7:15am
+P04,Bank,10:45am
+P05,Residential_02,10:05am
+P06,Cinema,8:00pm
+P07,Mall,7:10pm
+P08,PostOffice,12:35pm
+P09,Residential_04,7:20am
+P10,SportsCenter,3:30pm
+P11,Residential_03,4:05pm
+P12,TownCouncil,10:10am
