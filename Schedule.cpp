@@ -5,6 +5,21 @@ Schedule::Schedule(const Passenger* passenger, const ShuttleVehicle* shuttle)
     : assignPassenger(passenger), assignShuttle(shuttle) {
 }
 
+// Copy Constructor 
+Schedule::Schedule(const Schedule& other) {
+    assignPassenger = other.assignPassenger;
+    assignShuttle = other.assignShuttle;
+}
+
+// Copy Assignment Operator 
+Schedule& Schedule::operator=(const Schedule& other) {
+    if (this != &other) { // Guard against self-assignment
+        assignPassenger = other.assignPassenger;
+        assignShuttle = other.assignShuttle;
+    }
+    return *this;
+}
+
 const Passenger* Schedule::getPassenger() const { return assignPassenger; }
 const ShuttleVehicle* Schedule::getShuttle() const { return assignShuttle; }
 
