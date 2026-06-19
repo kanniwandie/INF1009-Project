@@ -25,6 +25,11 @@ Project/
 g++ -std=c++17 *.cpp -o route_planner
 ```
 
+## Run
+```bash
+.\route_planner.exe
+```
+
 ## Class Hierarchy
 
 ```
