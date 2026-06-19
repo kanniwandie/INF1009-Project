@@ -21,6 +21,8 @@ public:
 
     const Passenger* getPassenger() const;
     const ShuttleVehicle* getShuttle() const;
+    Schedule(const Schedule&) = default;
+    Schedule& operator=(const Schedule&) = default;
 };
 
 class ScheduleList {
