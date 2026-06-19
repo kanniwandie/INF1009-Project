@@ -18,7 +18,12 @@ private:
 
 public:
     Schedule(const Passenger* passenger, const ShuttleVehicle* shuttle);
-
+    // Copy Constructor
+    Schedule(const Schedule& other);
+    // Copy Assignment Operator
+    Schedule& operator=(const Schedule& other);
+    // Destructor, Doesn't own the lifecycle of the pointers, default is okay
+    ~Schedule() = default;
     const Passenger* getPassenger() const;
     const ShuttleVehicle* getShuttle() const;
     Schedule(const Schedule&) = default;

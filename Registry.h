@@ -15,6 +15,9 @@ public:
     Registry() = default;
     virtual ~Registry() = default;
 
+    Registry(const Registry& other) = default;
+    Registry& operator=(const Registry& other) = default;
+
     void add(const T& item) {
         items.push_back(item);
     }

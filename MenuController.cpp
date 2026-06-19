@@ -57,7 +57,12 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg, const
         while (getline(pFile, line)) {
             stringstream ss(line);
             if (getline(ss, id, ',') && getline(ss, dest, ',') && getline(ss, time, ',')) {
-                pReg.add(Passenger(trim(id), trim(dest), trim(time)));
+                string trimmedId = trim(id);
+                if (pReg.findById(trimmedId) != nullptr) {
+                    cout << "[Warning] Skipped duplicate Passenger ID in file: " << trimmedId << "\n";
+                } else {
+                    pReg.add(Passenger(trimmedId, trim(dest), trim(time)));
+                }
             }
         }
         cout << "[RAM Storage] Successfully loaded passengers into memory.\n\n";
@@ -73,7 +78,12 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg, const
         while (getline(sFile, line)) {
             stringstream ss(line);
             if (getline(ss, id, ',') && getline(ss, chargingPoint, ',') && getline(ss, time, ',')) {
-                sReg.add(ShuttleVehicle(trim(id), trim(chargingPoint), trim(time)));
+                string trimmedId = trim(id);
+                if (sReg.findById(trimmedId) != nullptr) {
+                    cout << "[Warning] Skipped duplicate Shuttle ID in file: " << trimmedId << "\n";
+                } else {
+                    sReg.add(ShuttleVehicle(trimmedId, trim(chargingPoint), trim(time)));
+                }
             }
         }
         cout << "[RAM Storage] Successfully loaded shuttles into memory.\n\n";
@@ -140,6 +150,10 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
         case 1:
             cout << "Enter ID, Destination, and Time (separated by spaces): ";
             cin >> id >> dest >> time;
+            if (pReg.findById(id)) {
+                cout << "Passenger ID already exists in RAM. Please choose a unique ID.\n";
+                break;
+            }
             pReg.add(Passenger(id, dest, time));
             pReg.resetAssignments();
             cout << "Passenger added to RAM.\n";
@@ -147,6 +161,10 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
         case 2:
             cout << "Enter ID, Charging Point, and Time (separated by spaces): ";
             cin >> id >> dest >> time;
+            if (sReg.findById(id)) {
+                cout << "Shuttle ID already exists in RAM. Please choose a unique ID.\n";
+                break;
+            }
             sReg.add(ShuttleVehicle(id, dest, time));
             sReg.resetAssignments();
             cout << "Shuttle added to RAM.\n";

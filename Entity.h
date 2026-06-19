@@ -13,6 +13,8 @@ protected:
 public:
     Entity(const string& id, const string& destination, const string& scheduledTime);
     virtual ~Entity() = default;
+    Entity(const Entity& other) = default;
+    Entity& operator=(const Entity& other) = default;
 
     void setDestination(const string& dest);
     void setScheduledTime(const string& time);
