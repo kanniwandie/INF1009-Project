@@ -12,9 +12,6 @@ public:
     static void displayAllData(const PassengerList& pReg, const ShuttleList& sReg);
     static int getMenuChoice(int min, int max);
     static string trim(const string& s);
-private:
-    static void editPassenger(PassengerList& pReg);
-    static void editShuttle(ShuttleList& sReg);
 };
 
 #endif

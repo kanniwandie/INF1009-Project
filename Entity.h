@@ -1,20 +1,26 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include "Destination.h"
+#include "OperationalTime.h"
+#include "Time.h"
+#include <memory>
 #include <string>
 using namespace std;
 
+// Author: [Your Name]
 class Entity {
 protected:
     string id;
-    string destination;
-    string scheduledTime;
+    Destination destination;
+    unique_ptr<Time> scheduledTime;
+    bool assigned;
 
 public:
     Entity(const string& id, const string& destination, const string& scheduledTime);
     virtual ~Entity() = default;
-    Entity(const Entity& other) = default;
-    Entity& operator=(const Entity& other) = default;
+    Entity(const Entity& other);
+    Entity& operator=(const Entity& other);
 
     void setDestination(const string& dest);
     void setScheduledTime(const string& time);
@@ -22,7 +28,11 @@ public:
     string getID() const;
     string getDestination() const;
     string getScheduledTime() const;
+    const Destination& getDestinationObject() const;
+    const Time& getScheduledTimeObject() const;
 
+    virtual void setAssignedStatus(bool status);
+    virtual bool getAssignedStatus() const;
     virtual string getType() const = 0;
     virtual string getDescription() const;
 };

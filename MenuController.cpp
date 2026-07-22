@@ -1,32 +1,11 @@
 #include "MenuController.h"
+#include "FileLoader.h"
+#include "ScheduleOutputHandler.h"
+#include "SystemDataService.h"
+#include "UserInputParser.h"
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <limits>
 using namespace std;
-
-static string buildFilePath(const string& folder, const string& defaultName) {
-    if (folder.empty()) return defaultName;
-    if (folder.back() == '/' || folder.back() == '\\') return folder + defaultName;
-    return folder + "/" + defaultName;
-}
-
-static bool openDataFile(ifstream& file, const string& defaultName, const string& label) {
-    if (!file.is_open()) {
-        cout << "[Notice] '" << defaultName << "' not found.\n";
-        cout << "Enter file path for " << label << " file: ";
-        string userPath;
-        cin >> userPath;
-        if (userPath.find(".txt") == string::npos) {
-            if (!userPath.empty() && userPath.back() != '/' && userPath.back() != '\\') {
-                userPath += "/";
-            }
-            userPath += defaultName;
-        }
-        file.open(userPath);
-    }
-    return file.is_open();
-}
 
 string MenuController::trim(const string& s) {
     size_t start = s.find_first_not_of(" \t");
@@ -50,88 +29,15 @@ void MenuController::loadDataFiles(PassengerList& pReg, ShuttleList& sReg, const
     pReg.clear();
     sReg.clear();
 
-    string pPath = buildFilePath(folder, "passenger.txt");
-    ifstream pFile(pPath);
-    if (openDataFile(pFile, "passenger.txt", "passenger")) {
-        string line, id, dest, time;
-        while (getline(pFile, line)) {
-            stringstream ss(line);
-            if (getline(ss, id, ',') && getline(ss, dest, ',') && getline(ss, time, ',')) {
-                string trimmedId = trim(id);
-                if (pReg.findById(trimmedId) != nullptr) {
-                    cout << "[Warning] Skipped duplicate Passenger ID in file: " << trimmedId << "\n";
-                } else {
-                    pReg.add(Passenger(trimmedId, trim(dest), trim(time)));
-                }
-            }
-        }
-        cout << "[RAM Storage] Successfully loaded passengers into memory.\n\n";
-        pFile.close();
+    if (SystemDataService::loadInitialData(pReg, sReg, folder)) {
+        cout << "[RAM Storage] Successfully loaded data into memory.\n\n";
     } else {
-        cout << "[Warning] Could not locate or open passenger data. Starting with empty storage.\n\n";
-    }
-
-    string sPath = buildFilePath(folder, "shuttle.txt");
-    ifstream sFile(sPath);
-    if (openDataFile(sFile, "shuttle.txt", "shuttle")) {
-        string line, id, chargingPoint, time;
-        while (getline(sFile, line)) {
-            stringstream ss(line);
-            if (getline(ss, id, ',') && getline(ss, chargingPoint, ',') && getline(ss, time, ',')) {
-                string trimmedId = trim(id);
-                if (sReg.findById(trimmedId) != nullptr) {
-                    cout << "[Warning] Skipped duplicate Shuttle ID in file: " << trimmedId << "\n";
-                } else {
-                    sReg.add(ShuttleVehicle(trimmedId, trim(chargingPoint), trim(time)));
-                }
-            }
-        }
-        cout << "[RAM Storage] Successfully loaded shuttles into memory.\n\n";
-        sFile.close();
-    } else {
-        cout << "[Warning] Could not locate or open shuttle data. Starting with empty storage.\n\n";
-    }
-}
-
-void MenuController::editPassenger(PassengerList& pReg) {
-    string id, newDest, newTime;
-    cout << "Enter Passenger ID to edit: ";
-    cin >> id;
-
-    Passenger* p = pReg.findById(id);
-    if (p) {
-        cout << "Found " << p->getDescription() << "\n";
-        cout << "Enter New Destination and New Time (separated by space): ";
-        cin >> newDest >> newTime;
-        p->setDestination(newDest);
-        p->setScheduledTime(newTime);
-        pReg.resetAssignments();
-        cout << "[RAM Storage] Passenger updated successfully in-place.\n";
-    } else {
-        cout << "Passenger ID not found in RAM.\n";
-    }
-}
-
-void MenuController::editShuttle(ShuttleList& sReg) {
-    string id, newPoint, newTime;
-    cout << "Enter Shuttle ID to edit: ";
-    cin >> id;
-
-    ShuttleVehicle* s = sReg.findById(id);
-    if (s) {
-        cout << "Found " << s->getDescription() << "\n";
-        cout << "Enter New Charging Point and New Time (separated by space): ";
-        cin >> newPoint >> newTime;
-        s->setDestination(newPoint);
-        s->setScheduledTime(newTime);
-        sReg.resetAssignments();
-        cout << "[RAM Storage] Shuttle updated successfully in-place.\n";
-    } else {
-        cout << "Shuttle ID not found in RAM.\n";
+        cout << "[Warning] Could not load data files. Starting with empty storage.\n\n";
     }
 }
 
 void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& sReg) {
+    SystemDataService dataService;
     int choice = 0;
     while (choice != 7) {
         cout << "\n--- RAM Local Data Storage Management ---\n"
@@ -147,30 +53,81 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
 
         string id, dest, time;
         switch (choice) {
-        case 1:
-            cout << "Enter ID, Destination, and Time (separated by spaces): ";
-            cin >> id >> dest >> time;
-            if (pReg.findById(id)) {
-                cout << "Passenger ID already exists in RAM. Please choose a unique ID.\n";
+        case 1: {
+            int groupSize = 1;
+            cout << "Enter ID, Destination, Time, and Group Size (separated by spaces): ";
+            cin >> id >> dest >> time >> groupSize;
+            if (pReg.containsId(id)) {
+                cout << "Error: Passenger ID '" << id << "' already exists.\n";
                 break;
             }
-            pReg.add(Passenger(id, dest, time));
+            UserInputParser inputParser;
+            string rawEntry = id + "," + dest + "," + time + "," + to_string(groupSize);
+            if (!inputParser.parsePassengerInput(rawEntry, pReg, sReg)) {
+                cout << "Passenger entry could not be parsed.\n";
+                break;
+            }
             pReg.resetAssignments();
             cout << "Passenger added to RAM.\n";
             break;
-        case 2:
-            cout << "Enter ID, Charging Point, and Time (separated by spaces): ";
-            cin >> id >> dest >> time;
-            if (sReg.findById(id)) {
-                cout << "Shuttle ID already exists in RAM. Please choose a unique ID.\n";
+        }
+        case 2: {
+            string model = "Small";
+            cout << "Enter ID, Charging Point, Time, and Model (separated by spaces): ";
+            cin >> id >> dest >> time >> model;
+            if (sReg.containsId(id)) {
+                cout << "Error: Shuttle ID '" << id << "' already exists.\n";
                 break;
             }
-            sReg.add(ShuttleVehicle(id, dest, time));
+            UserInputParser inputParser;
+            string rawEntry = id + "," + dest + "," + time + "," + model;
+            if (!inputParser.parseShuttleInput(rawEntry, pReg, sReg)) {
+                cout << "Shuttle entry could not be parsed.\n";
+                break;
+            }
             sReg.resetAssignments();
             cout << "Shuttle added to RAM.\n";
             break;
-        case 3: editPassenger(pReg); break;
-        case 4: editShuttle(sReg); break;
+        }
+        case 3: {
+            string id, newDest, newTime;
+            int newGroupSize = 1;
+            cout << "Enter Passenger ID to edit: ";
+            cin >> id;
+            Passenger* passenger = pReg.findById(id);
+            if (!passenger) {
+                cout << "Error: Passenger ID '" << id << "' does not exist.\n";
+            } else {
+                cout << "Found " << passenger->getDescription() << "\n";
+                cout << "Enter New Destination, New Time, and New Group Size (separated by space): ";
+                cin >> newDest >> newTime >> newGroupSize;
+                if (dataService.editPassenger(pReg, id, newDest, newTime, newGroupSize)) {
+                    cout << "[RAM Storage] Passenger updated successfully in-place.\n";
+                } else {
+                    cout << "Passenger update failed.\n";
+                }
+            }
+            break;
+        }
+        case 4: {
+            string id, newPoint, newTime, newModel;
+            cout << "Enter Shuttle ID to edit: ";
+            cin >> id;
+            ShuttleVehicle* shuttle = sReg.findById(id);
+            if (!shuttle) {
+                cout << "Error: Shuttle ID '" << id << "' does not exist.\n";
+            } else {
+                cout << "Found " << shuttle->getDescription() << "\n";
+                cout << "Enter New Charging Point, New Time, and New Model (separated by space): ";
+                cin >> newPoint >> newTime >> newModel;
+                if (dataService.editShuttle(sReg, id, newPoint, newTime, newModel)) {
+                    cout << "[RAM Storage] Shuttle updated successfully in-place.\n";
+                } else {
+                    cout << "Shuttle update failed.\n";
+                }
+            }
+            break;
+        }
         case 5:
             cout << "Enter Passenger ID to remove: ";
             cin >> id;
@@ -178,7 +135,7 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
                 pReg.resetAssignments();
                 cout << "Removed from RAM.\n";
             } else {
-                cout << "ID not found.\n";
+                cout << "Error: Passenger ID '" << id << "' does not exist.\n";
             }
             break;
         case 6:
@@ -188,7 +145,7 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
                 sReg.resetAssignments();
                 cout << "Removed from RAM.\n";
             } else {
-                cout << "ID not found.\n";
+                cout << "Error: Shuttle ID '" << id << "' does not exist.\n";
             }
             break;
         case 7: break;
@@ -197,21 +154,6 @@ void MenuController::handleDataManagementMenu(PassengerList& pReg, ShuttleList& 
 }
 
 void MenuController::displayAllData(const PassengerList& pReg, const ShuttleList& sReg) {
-    cout << "\n=== ALL PASSENGERS ===\n";
-    if (pReg.size() == 0) {
-        cout << "No passengers loaded.\n";
-    } else {
-        for (size_t i = 0; i < pReg.size(); ++i) {
-            cout << pReg[i].getDescription() << "\n";
-        }
-    }
-
-    cout << "\n=== ALL SHUTTLES ===\n";
-    if (sReg.size() == 0) {
-        cout << "No shuttles loaded.\n";
-    } else {
-        for (size_t i = 0; i < sReg.size(); ++i) {
-            cout << sReg[i].getDescription() << "\n";
-        }
-    }
+    ConsolePrinter printer;
+    printer.writeAllData(pReg, sReg);
 }

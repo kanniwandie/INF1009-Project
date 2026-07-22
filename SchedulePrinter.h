@@ -5,6 +5,8 @@
 #include <vector>
 using namespace std;
 
+// Author: [Your Name]
+// Purpose: Compatibility wrapper for the schedule output formatter layer.
 class SchedulePrinter {
 public:
     static void printSchedule(const Schedule& schedule);

@@ -4,12 +4,11 @@
 #include "Passenger.h"
 #include "ShuttleVehicle.h"
 #include "Registry.h"
+#include "IMatchingStrategy.h"
+#include <memory>
 #include <vector>
 #include <string>
 using namespace std;
-
-class PassengerList : public Registry<Passenger> {};
-class ShuttleList : public Registry<ShuttleVehicle> {};
 
 class Schedule {
 private:
@@ -33,14 +32,16 @@ private:
     ShuttleList shuttleRegistry;
     PassengerList passengerRegistry;
     vector<Schedule> activeSchedules;
+    unique_ptr<IMatchingStrategy> matchingStrategy;
 
 public:
-    ScheduleList() = default;
+    ScheduleList();
 
     PassengerList& getPassengerRegistry();
     ShuttleList& getShuttleRegistry();
     const vector<Schedule>& getActiveSchedules() const;
 
+    void setMatchingStrategy(unique_ptr<IMatchingStrategy> strategy);
     void generateSchedules();
     void clearSchedules();
 };

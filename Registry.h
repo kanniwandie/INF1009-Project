@@ -4,7 +4,11 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <utility>
 using namespace std;
+
+class Passenger;
+class ShuttleVehicle;
 
 template <typename T>
 class Registry {
@@ -19,18 +23,24 @@ public:
     Registry& operator=(const Registry& other) = default;
 
     void add(const T& item) {
+        if (containsId(item.getID())) {
+            return;
+        }
         items.push_back(item);
     }
 
     bool remove(const string& id) {
-        auto it = remove_if(items.begin(), items.end(), [&id](const T& item) {
-            return item.getID() == id;
-        });
-        if (it != items.end()) {
-            items.erase(it, items.end());
-            return true;
+        for (auto it = items.begin(); it != items.end(); ++it) {
+            if (it->getID() == id) {
+                items.erase(it);
+                return true;
+            }
         }
         return false;
+    }
+
+    bool containsId(const string& id) const {
+        return findById(id) != nullptr;
     }
 
     const vector<T>& getItems() const {
@@ -64,5 +74,8 @@ public:
         }
     }
 };
+
+class ShuttleList : public Registry<ShuttleVehicle> {};
+class PassengerList : public Registry<Passenger> {};
 
 #endif

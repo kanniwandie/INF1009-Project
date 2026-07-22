@@ -8,8 +8,7 @@ using namespace std;
 
 class ScheduleStorage {
 public:
-    static string formatScheduleToString(const Schedule& schedule);
-    static bool saveSchedules(const string& filename, const vector<Schedule>& activeSchedules);
+    static void saveSchedules(const string& filename, const vector<Schedule>& schedules);
 };
 
 #endif

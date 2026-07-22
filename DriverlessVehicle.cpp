@@ -8,5 +8,5 @@ DriverlessVehicle::DriverlessVehicle(const string& id, const string& destination
 string DriverlessVehicle::getType() const { return "DriverlessVehicle"; }
 
 string DriverlessVehicle::getDescription() const {
-    return "DriverlessVehicle " + id + " -> " + destination + " @ " + scheduledTime;
+    return "DriverlessVehicle " + getID() + " -> " + getDestination() + " @ " + getScheduledTime();
 }
