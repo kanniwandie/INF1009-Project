@@ -17,7 +17,7 @@ public:
 
     void setGroupSize(int size);
     int getGroupSize() const;
-    bool isValid() const;
+    bool isValid() const override;
     bool hasSameID(const PassengerID& other) const;
     bool hasSameID(const string& other) const;
     void edit(const string& newDestination, const string& newTime, int newGroupSize);

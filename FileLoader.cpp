@@ -1,26 +1,33 @@
 #include "FileLoader.h"
-#include "Schedule.h"
+#include "Registry.h"
 #include "Passenger.h"
 #include "ShuttleVehicle.h"
+#include "ShuttleModel.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 namespace {
 string trim(const string& value) {
-    size_t start = value.find_first_not_of(" \t");
+    size_t start = value.find_first_not_of(" \t\r\n");
     if (start == string::npos) return "";
-    size_t end = value.find_last_not_of(" \t");
+    size_t end = value.find_last_not_of(" \t\r\n");
     return value.substr(start, end - start + 1);
 }
 }
 
 namespace {
 Passenger createPassengerFromFields(const string& id, const string& destination, const string& time, const string& groupSizeField) {
-    int groupSize = 1;
+    int groupSize;
     try {
         groupSize = stoi(trim(groupSizeField));
     } catch (...) {
-        groupSize = 1;
+        // Deliberately NOT defaulting to a plausible-looking group size like 1
+        // here: that would make a corrupted/non-numeric field (e.g. "abc") in
+        // a data file silently masquerade as a legitimate booking. -1 fails
+        // Passenger::isValid()'s groupSize > 0 check, so the entity is
+        // correctly reported as invalid instead of quietly accepted.
+        groupSize = -1;
     }
     return Passenger(trim(id), trim(destination), trim(time), groupSize);
 }
@@ -47,9 +54,12 @@ bool PassengerParser::load(const string& path, PassengerList& passengers, Shuttl
     if (!file.is_open()) return false;
 
     string line;
+    int lineNumber = 0;
     while (getline(file, line)) {
+        ++lineNumber;
+        if (trim(line).empty()) continue;
         if (!parse(line, passengers, shuttles)) {
-            continue;
+            cerr << "[Warning] " << path << " line " << lineNumber << ": malformed or duplicate passenger entry skipped: \"" << line << "\"\n";
         }
     }
     return true;
@@ -63,8 +73,7 @@ bool PassengerParser::parse(const string& rawEntry, PassengerList& passengers, S
         return false;
     }
 
-    passengers.add(createPassengerFromFields(id, destination, time, groupSizeField));
-    return true;
+    return passengers.add(createPassengerFromFields(id, destination, time, groupSizeField));
 }
 
 bool ShuttleParser::load(const string& path, PassengerList& passengers, ShuttleList& shuttles) {
@@ -73,9 +82,12 @@ bool ShuttleParser::load(const string& path, PassengerList& passengers, ShuttleL
     if (!file.is_open()) return false;
 
     string line;
+    int lineNumber = 0;
     while (getline(file, line)) {
+        ++lineNumber;
+        if (trim(line).empty()) continue;
         if (!parse(line, passengers, shuttles)) {
-            continue;
+            cerr << "[Warning] " << path << " line " << lineNumber << ": malformed or duplicate shuttle entry skipped: \"" << line << "\"\n";
         }
     }
     return true;
@@ -89,6 +101,5 @@ bool ShuttleParser::parse(const string& rawEntry, PassengerList& passengers, Shu
         return false;
     }
 
-    shuttles.add(createShuttleFromFields(id, destination, time, modelName));
-    return true;
+    return shuttles.add(createShuttleFromFields(id, destination, time, modelName));
 }

@@ -3,13 +3,12 @@
 
 #include "Passenger.h"
 #include "ShuttleVehicle.h"
-#include "Registry.h"
-#include "IMatchingStrategy.h"
-#include <memory>
-#include <vector>
-#include <string>
 using namespace std;
 
+// Author: [Your Name]
+// Purpose: Small immutable value object representing one matched passenger-shuttle
+// pairing. Does not own the Passenger/ShuttleVehicle it points to; ownership stays
+// with the registries in ScheduleManager.
 class Schedule {
 private:
     const Passenger* assignPassenger;
@@ -17,33 +16,12 @@ private:
 
 public:
     Schedule(const Passenger* passenger, const ShuttleVehicle* shuttle);
-    // Copy Constructor
     Schedule(const Schedule& other);
-    // Copy Assignment Operator
     Schedule& operator=(const Schedule& other);
-    // Destructor, Doesn't own the lifecycle of the pointers, default is okay
     ~Schedule() = default;
+
     const Passenger* getPassenger() const;
     const ShuttleVehicle* getShuttle() const;
-};
-
-class ScheduleList {
-private:
-    ShuttleList shuttleRegistry;
-    PassengerList passengerRegistry;
-    vector<Schedule> activeSchedules;
-    unique_ptr<IMatchingStrategy> matchingStrategy;
-
-public:
-    ScheduleList();
-
-    PassengerList& getPassengerRegistry();
-    ShuttleList& getShuttleRegistry();
-    const vector<Schedule>& getActiveSchedules() const;
-
-    void setMatchingStrategy(unique_ptr<IMatchingStrategy> strategy);
-    void generateSchedules();
-    void clearSchedules();
 };
 
 #endif

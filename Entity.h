@@ -33,6 +33,7 @@ public:
 
     virtual void setAssignedStatus(bool status);
     virtual bool getAssignedStatus() const;
+    virtual bool isValid() const = 0;
     virtual string getType() const = 0;
     virtual string getDescription() const;
 };

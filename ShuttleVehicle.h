@@ -30,7 +30,7 @@ public:
     void edit(const string& newDestination, const string& newTime, unique_ptr<ShuttleModel> newModel);
     void setModel(unique_ptr<ShuttleModel> newModel);
     const ShuttleModel* getModel() const;
-    bool isValid() const;
+    bool isValid() const override;
 
     string getType() const override;
     string getDescription() const override;

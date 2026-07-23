@@ -1,7 +1,7 @@
 #ifndef SYSTEM_DATA_SERVICE_H
 #define SYSTEM_DATA_SERVICE_H
 
-#include "Schedule.h"
+#include "Registry.h"
 #include "DataExporter.h"
 #include <string>
 using namespace std;
@@ -13,7 +13,6 @@ private:
 
 public:
     static bool loadInitialData(PassengerList& passengers, ShuttleList& shuttles, const string& folder = "");
-    static bool saveArchive(const string& path, const vector<Schedule>& schedules);
 
     bool editPassenger(PassengerList& passengers, const string& id, const string& newDestination, const string& newTime, int newGroupSize) const;
     bool editShuttle(ShuttleList& shuttles, const string& id, const string& newDestination, const string& newTime, const string& newModel) const;

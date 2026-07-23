@@ -3,30 +3,33 @@
 
 #include <vector>
 #include <string>
-#include <algorithm>
-#include <utility>
 using namespace std;
 
 class Passenger;
 class ShuttleVehicle;
 
+// Author: [Your Name]
+// Purpose: Generic in-memory store keyed by string ID. Kept deliberately generic and
+// domain-agnostic - it knows nothing about passengers or shuttles specifically, only
+// that T has getID()/setAssignedStatus(). PassengerList/ShuttleList below compose one
+// of these rather than inheriting from it (see the note on those classes).
 template <typename T>
 class Registry {
-protected:
+private:
     vector<T> items;
 
 public:
     Registry() = default;
-    virtual ~Registry() = default;
-
+    ~Registry() = default;
     Registry(const Registry& other) = default;
     Registry& operator=(const Registry& other) = default;
 
-    void add(const T& item) {
+    bool add(const T& item) {
         if (containsId(item.getID())) {
-            return;
+            return false;
         }
         items.push_back(item);
+        return true;
     }
 
     bool remove(const string& id) {
@@ -75,7 +78,50 @@ public:
     }
 };
 
-class ShuttleList : public Registry<ShuttleVehicle> {};
-class PassengerList : public Registry<Passenger> {};
+// Author: [Your Name]
+// Purpose: The town's passenger roster. Composes a Registry<Passenger> (HAS-A) instead
+// of inheriting from it (IS-A). A PassengerList is a domain concept in its own right -
+// it is not, conceptually, "a kind of generic registry that happens to hold passengers".
+// Composition also means PassengerList is free to grow domain-specific behaviour later
+// without that behaviour leaking into the generic Registry template, and without a
+// consumer of PassengerList being able to slice it down to a bare Registry<Passenger>.
+class PassengerList {
+private:
+    Registry<Passenger> registry;
+
+public:
+    bool add(const Passenger& item);
+    bool remove(const string& id);
+    bool containsId(const string& id) const;
+    const vector<Passenger>& getItems() const;
+    Passenger* findById(const string& id);
+    const Passenger* findById(const string& id) const;
+    size_t size() const;
+    Passenger& operator[](size_t index);
+    const Passenger& operator[](size_t index) const;
+    void clear();
+    void resetAssignments();
+};
+
+// Author: [Your Name]
+// Purpose: The town's shuttle roster. See PassengerList above for the composition
+// rationale - the same reasoning applies here.
+class ShuttleList {
+private:
+    Registry<ShuttleVehicle> registry;
+
+public:
+    bool add(const ShuttleVehicle& item);
+    bool remove(const string& id);
+    bool containsId(const string& id) const;
+    const vector<ShuttleVehicle>& getItems() const;
+    ShuttleVehicle* findById(const string& id);
+    const ShuttleVehicle* findById(const string& id) const;
+    size_t size() const;
+    ShuttleVehicle& operator[](size_t index);
+    const ShuttleVehicle& operator[](size_t index) const;
+    void clear();
+    void resetAssignments();
+};
 
 #endif

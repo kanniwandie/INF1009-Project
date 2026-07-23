@@ -16,7 +16,15 @@ void Passenger::edit(const string& newDestination, const string& newTime, int ne
 }
 
 bool Passenger::isValid() const {
-    return passengerId.isValid() && groupSize > 0 && groupSize <= 15 && destination.isValid();
+    // Deliberately does NOT call getScheduledTimeObject().isValid() - that check
+    // enforces the shuttle-only 6am-midnight operating window (Requirement 3),
+    // which would wrongly reject a legitimate passenger request placed just
+    // after midnight (see the S01/P06 spec example). Instead, only check that
+    // the time string was actually parseable at all: OperationalTime::parse()
+    // uses hour = -1 as a sentinel specifically for "could not parse this,"
+    // which a legitimately parsed time (0-23) can never produce.
+    return passengerId.isValid() && groupSize > 0 && groupSize <= 15 && destination.isValid()
+        && getScheduledTimeObject().getHour() >= 0;
 }
 
 bool Passenger::hasSameID(const PassengerID& other) const {

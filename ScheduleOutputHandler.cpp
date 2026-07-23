@@ -118,6 +118,26 @@ void ConsolePrinter::writeAllData(const PassengerList& passengers, const Shuttle
     }
 }
 
+void ConsolePrinter::writeEntityOverview(const vector<const Entity*>& entities) const {
+    cout << "\n====================================================================================\n";
+    cout << "POLYMORPHIC ENTITY OVERVIEW (single loop over vector<const Entity*>)\n";
+    cout << "====================================================================================\n";
+    cout << left << setw(9) << "Type" << "| " << left << setw(9) << "Valid?" << "| " << "Description\n";
+    cout << string(80, '-') << "\n";
+
+    // entities mixes Passenger* and ShuttleVehicle* objects (upcast to Entity*).
+    // getType()/isValid()/getDescription() are pure virtual on Entity, so this one
+    // loop dispatches to the correct override for each element at runtime without
+    // ever checking (or needing to know) which concrete type it is looking at.
+    for (const Entity* entity : entities) {
+        if (!entity) continue;
+        cout << left << setw(9) << entity->getType() << "| "
+             << left << setw(9) << (entity->isValid() ? "Valid" : "Invalid") << "| "
+             << entity->getDescription() << "\n";
+    }
+}
+
+
 void TextFileFormatter::writeUnassigned(const PassengerList& passengers, const ShuttleList& shuttles) const {
     ofstream file(outputPath, ios::app);
     if (!file.is_open()) {
@@ -169,5 +189,29 @@ void TextFileFormatter::writeAllData(const PassengerList& passengers, const Shut
     file << string(86, '-') << "\n";
     for (const auto& shuttle : shuttles.getItems()) {
         file << left << setw(12) << shuttle.getID() << "| " << left << setw(18) << shuttle.getDestination() << "| " << left << setw(18) << formatTime(shuttle.getScheduledTimeObject()) << "| " << left << setw(10) << modelName(shuttle) << "| " << (shuttle.getAssignedStatus() ? "Assigned" : "Unassigned") << "\n";
+    }
+}
+
+void TextFileFormatter::writeEntityOverview(const vector<const Entity*>& entities) const {
+    ofstream file(outputPath, ios::app);
+    if (!file.is_open()) {
+        cerr << "Unable to append entity overview to " << outputPath << "\n";
+        return;
+    }
+
+    file << "\n====================================================================================\n";
+    file << "POLYMORPHIC ENTITY OVERVIEW (single loop over vector<const Entity*>)\n";
+    file << "====================================================================================\n";
+    file << left << setw(9) << "Type" << "| " << left << setw(9) << "Valid?" << "| " << "Description\n";
+    file << string(80, '-') << "\n";
+
+    // Same polymorphic dispatch as ConsolePrinter::writeEntityOverview, just
+    // written to a file instead of the console - the entity-handling code is
+    // identical either way because it only ever touches the Entity interface.
+    for (const Entity* entity : entities) {
+        if (!entity) continue;
+        file << left << setw(9) << entity->getType() << "| "
+             << left << setw(9) << (entity->isValid() ? "Valid" : "Invalid") << "| "
+             << entity->getDescription() << "\n";
     }
 }

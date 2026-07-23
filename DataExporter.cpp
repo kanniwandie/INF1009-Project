@@ -23,8 +23,8 @@ bool DataExporter::saveShuttles(const string& path, const ShuttleList& shuttles)
     }
 
     for (const auto& shuttle : shuttles.getItems()) {
-        const string modelName = shuttle.getModel() ? shuttle.getModel()->getName() : "Small";
-        file << shuttle.getID() << "," << shuttle.getDestination() << "," << shuttle.getScheduledTime() << "," << modelName << "\n";
+        const string modelCode = shuttle.getModel() ? shuttle.getModel()->getCode() : "Small";
+        file << shuttle.getID() << "," << shuttle.getDestination() << "," << shuttle.getScheduledTime() << "," << modelCode << "\n";
     }
     return true;
 }

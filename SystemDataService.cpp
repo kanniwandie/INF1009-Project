@@ -1,7 +1,11 @@
 #include "SystemDataService.h"
 #include "FileLoader.h"
+#include "Passenger.h"
+#include "ShuttleVehicle.h"
+#include "ShuttleModel.h"
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 namespace {
 string buildPath(const string& folder, const string& filename) {
@@ -20,18 +24,6 @@ bool SystemDataService::loadInitialData(PassengerList& passengers, ShuttleList& 
     bool passengerLoaded = passengerParser.load(buildPath(folder, "passenger.txt"), passengers, shuttles);
     bool shuttleLoaded = shuttleParser.load(buildPath(folder, "shuttle.txt"), passengers, shuttles);
     return passengerLoaded || shuttleLoaded;
-}
-
-bool SystemDataService::saveArchive(const string& path, const vector<Schedule>& schedules) {
-    ofstream file(path);
-    if (!file.is_open()) {
-        return false;
-    }
-
-    for (const auto& schedule : schedules) {
-        file << schedule.getPassenger()->getID() << "," << schedule.getShuttle()->getID() << "\n";
-    }
-    return true;
 }
 
 bool SystemDataService::editPassenger(PassengerList& passengers, const string& id, const string& newDestination, const string& newTime, int newGroupSize) const {

@@ -39,7 +39,7 @@ void ShuttleVehicle::setModel(unique_ptr<ShuttleModel> newModel) { model = std::
 const ShuttleModel* ShuttleVehicle::getModel() const { return model.get(); }
 
 bool ShuttleVehicle::isValid() const {
-    return vehicleId.isValid() && destination.isValid();
+    return vehicleId.isValid() && destination.isValid() && getScheduledTimeObject().isValid();
 }
 
 string ShuttleVehicle::getType() const { return "Shuttle"; }

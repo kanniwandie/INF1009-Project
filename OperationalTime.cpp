@@ -5,9 +5,9 @@
 
 namespace {
 string trim(const string& value) {
-    size_t start = value.find_first_not_of(" \t");
+    size_t start = value.find_first_not_of(" \t\r\n");
     if (start == string::npos) return "";
-    size_t end = value.find_last_not_of(" \t");
+    size_t end = value.find_last_not_of(" \t\r\n");
     return value.substr(start, end - start + 1);
 }
 
@@ -61,17 +61,21 @@ OperationalTime::OperationalTime(int hour, int minute, unique_ptr<TimeFormatter>
 unique_ptr<OperationalTime> OperationalTime::parse(const string& rawTime, unique_ptr<TimeFormatter> formatter) {
     int hour = 6;
     int minute = 0;
-    if (parseTimeValue(rawTime, hour, minute)) {
-        if (!formatter) {
-            formatter = make_unique<AMPMTimeFormatter>();
-        }
-        return make_unique<OperationalTime>(hour, minute, std::move(formatter));
-    }
-
     if (!formatter) {
         formatter = make_unique<AMPMTimeFormatter>();
     }
-    return make_unique<OperationalTime>(6, 0, std::move(formatter));
+
+    if (parseTimeValue(rawTime, hour, minute)) {
+        return make_unique<OperationalTime>(hour, minute, std::move(formatter));
+    }
+
+    // Deliberately NOT falling back to a plausible-looking default like 6:00 AM
+    // here: that would make garbage input (e.g. a malformed data file row)
+    // silently masquerade as a legitimate, valid entity. hour = -1 guarantees
+    // isValid() below correctly reports this object as invalid, so callers
+    // (and the CRUD validation added to MenuController) can detect and reject
+    // unparseable time strings instead of quietly accepting them.
+    return make_unique<OperationalTime>(-1, -1, std::move(formatter));
 }
 
 bool OperationalTime::isValid() const {
