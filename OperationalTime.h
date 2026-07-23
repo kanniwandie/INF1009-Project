@@ -3,7 +3,6 @@
 
 #include "Time.h"
 
-// Author: [Your Name]
 // Purpose: Represents a validated operational shuttle time within the allowed service window.
 class OperationalTime : public Time {
 public:

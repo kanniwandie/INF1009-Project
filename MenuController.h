@@ -5,7 +5,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: UI/coordination layer only. Holds a reference to a ScheduleManager and
 // translates console menu choices into calls on it; MenuController itself contains
 // no file parsing, matching, or persistence logic - all of that was extracted into

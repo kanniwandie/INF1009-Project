@@ -8,7 +8,6 @@
 #include <vector>
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: Output abstraction for rendering schedules and unassigned entries in multiple formats.
 class ScheduleOutputHandler {
 public:

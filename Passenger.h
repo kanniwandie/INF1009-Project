@@ -6,7 +6,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 class Passenger : public Entity {
 private:
     PassengerID passengerId;

@@ -8,7 +8,6 @@ using namespace std;
 class Passenger;
 class ShuttleVehicle;
 
-// Author: [Your Name]
 // Purpose: Generic in-memory store keyed by string ID. Kept deliberately generic and
 // domain-agnostic - it knows nothing about passengers or shuttles specifically, only
 // that T has getID()/setAssignedStatus(). PassengerList/ShuttleList below compose one
@@ -78,7 +77,6 @@ public:
     }
 };
 
-// Author: [Your Name]
 // Purpose: The town's passenger roster. Composes a Registry<Passenger> (HAS-A) instead
 // of inheriting from it (IS-A). A PassengerList is a domain concept in its own right -
 // it is not, conceptually, "a kind of generic registry that happens to hold passengers".
@@ -103,7 +101,6 @@ public:
     void resetAssignments();
 };
 
-// Author: [Your Name]
 // Purpose: The town's shuttle roster. See PassengerList above for the composition
 // rationale - the same reasoning applies here.
 class ShuttleList {

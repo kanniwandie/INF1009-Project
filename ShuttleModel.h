@@ -5,7 +5,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 class ShuttleModel {
 public:
     virtual ~ShuttleModel() = default;

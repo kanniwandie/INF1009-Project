@@ -3,7 +3,6 @@
 
 #include "TimeFormatter.h"
 
-// Author: [Your Name]
 // Purpose: Formats time values using 12-hour AM/PM notation.
 class AMPMTimeFormatter : public TimeFormatter {
 public:

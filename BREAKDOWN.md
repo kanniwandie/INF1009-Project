@@ -1,84 +1,173 @@
 # Design Breakdown – Part 2 Implementation
 
 ## 1. Architecture and design principles
+# Design Breakdown — Part 2 Implementation
 
-The current implementation has been reworked to follow a more layered and maintainable structure. The main goal was to separate business-domain logic from UI and infrastructure concerns so the system is easier to extend and test.
+## 1. Architecture and design principles
 
-### What has been done
-- The project now uses a layered structure:
-  - Domain layer: entities such as Passenger, ShuttleVehicle, Time, OperationalTime, Destination, and shuttle models.
-  - Service/application layer: ScheduleList, SystemDataService, and persistence helpers.
-  - UI/infrastructure layer: MenuController, UserInputParser, FileLoader, and output handlers.
-- This separation improves clarity and reduces direct coupling between the console interface and the business logic.
+The system is layered to separate UI, application orchestration, domain logic, and
+infrastructure concerns.
+
+- **UI layer**: `MenuController` — reads console input, delegates every piece of
+  actual work to `ScheduleManager`. Contains no parsing, matching, or persistence
+  logic itself.
+- **Application facade layer**: `ScheduleManager` — owns the passenger/shuttle
+  registries plus `SystemDataService` and `SchedulingService`, and exposes one simple
+  interface for the UI to call.
+- **Domain/service layer**: `SchedulingService` (facade over `ScheduleMatcher` +
+  `ScheduleRepository`), `SystemDataService` (load/edit/save orchestration).
+- **Domain entities**: `Entity` (abstract) → `Passenger`, and `Entity` →
+  `DriverlessVehicle` → `ShuttleVehicle`; value objects `Destination`, `PassengerID`,
+  `VehicleID`, `Time`/`OperationalTime` replace primitive strings/ints for these
+  fields.
+- **Infrastructure**: `FileLoader`/`PassengerParser`/`ShuttleParser` (reading),
+  `DataExporter` (writing), `ScheduleOutputHandler`/`ConsolePrinter`/
+  `TextFileFormatter` (rendering).
 
 ### What to improve
-- A more formal dependency injection mechanism could be introduced so services receive their dependencies explicitly instead of constructing them internally.
-- The UI layer could be further reduced so menu logic focuses only on user interaction and leaves even more behaviour in services.
 
-## 2. SOLID principles and maintainability
+- No formal dependency-injection container — services are constructed as members
+  rather than injected. For a project this size that's a reasonable trade-off, but
+  it's worth naming as a deliberate scope decision rather than an oversight.
+- `MenuController` still reads `std::cin` directly rather than through an input
+  abstraction, so it isn't unit-testable in isolation without real console input.
 
-### What has been done
-- Single Responsibility Principle (SRP): each class is focused on a single concern such as parsing, matching, rendering, or storage.
-- Open/Closed Principle (OCP): the matching system can be extended by adding new strategy classes without changing the core scheduling engine.
-- Dependency Inversion Principle (DIP): higher-level components depend on abstractions such as IMatchingStrategy and ScheduleOutputHandler rather than on concrete implementations.
+## 2. SOLID principles
 
-### What to improve
-- The code would benefit from more explicit interfaces and dependency injection to make testing easier and reduce hidden coupling.
-- Some formatting and validation logic is still somewhat embedded in the UI and output layers, which could be further extracted into reusable helpers.
+Assessed honestly against the actual classes, not just in the abstract.
+
+### Single Responsibility
+
+Holds for most of the codebase — `ScheduleRepository`, `ScheduleMatcher`,
+`Destination`/`PassengerID`/`VehicleID`, and the `IMatchingStrategy`/
+`ScheduleOutputHandler` implementations each do exactly one thing.
+
+Two honest exceptions:
+- `ScheduleManager` combines four concerns (registry ownership, delegating to
+  persistence, delegating to matching, exposing entities). Defensible as a Facade,
+  but it's the class most at risk of growing back into a god-class if the system
+  expands further.
+- `MenuController::handleDataManagementMenu()` is one large method handling six
+  distinct CRUD operations in a single switch statement. It delegates the actual
+  work correctly, but the menu-flow logic for six operations still lives in one place.
+
+### Open/Closed
+
+- `IMatchingStrategy` and `ScheduleOutputHandler` are genuinely open for extension:
+  a new dispatch algorithm or a new output format can be added without modifying any
+  existing class (`ScheduleMatcher`, `SchedulingService`, `ScheduleManager`,
+  `MenuController` are all untouched by such an addition).
+- `ShuttleModel` creation in `FileLoader.cpp` is **not** open/closed — adding a new
+  shuttle model means editing an `if/else` chain of string comparisons. A factory
+  keyed by name (e.g. a `map<string, function<unique_ptr<ShuttleModel>()>>`) would
+  fix this; it currently doesn't exist.
+
+### Liskov Substitution
+
+Holds, and is directly demonstrated in code: `ScheduleOutputHandler::
+writeEntityOverview()` iterates a `vector<const Entity*>` containing both `Passenger`
+and `ShuttleVehicle` objects with zero type-checking or special-casing — every call
+(`getType()`, `isValid()`, `getDescription()`) dispatches correctly regardless of
+which concrete type is behind the pointer.
+
+### Interface Segregation
+
+No major violations — every method on `IMatchingStrategy` and `ScheduleOutputHandler`
+is used meaningfully by every implementer. One soft spot: read-only consumers of
+`PassengerList`/`ShuttleList` (like the output classes) are handed the same fully
+mutable interface as CRUD code; a stricter design would expose a const, iteration-only
+view to the former.
+
+### Dependency Inversion
+
+Real in one place, not fully applied in another:
+- `ScheduleMatcher` depends only on the `IMatchingStrategy` abstraction — genuine DIP.
+- `MenuController` does **not** fully apply DIP to output rendering: it constructs
+  `ConsolePrinter`/`TextFileFormatter` directly inline rather than depending on
+  `ScheduleOutputHandler` via injection. The abstraction exists and is used
+  polymorphically once constructed, but `MenuController` is still compile-time coupled
+  to the concrete classes.
 
 ## 3. Design patterns implemented
 
-### Strategy Pattern
-The matching behaviour is implemented using the Strategy Pattern.
+### Strategy Pattern (used twice, independently)
 
-### What has been done
-- IMatchingStrategy defines a common interface for matching behaviour.
-- MinimumDispatchStrategy and EarliestArrivalStrategy implement different matching rules.
-- ScheduleList uses the strategy object dynamically, so the matching logic can be swapped easily.
+1. **Matching algorithms** — `IMatchingStrategy`, implemented by
+   `MinimumDispatchStrategy` (packs the highest-capacity eligible shuttle first, to
+   minimize the number of shuttles dispatched) and `EarliestArrivalStrategy` (picks,
+   per passenger, whichever eligible shuttle arrives soonest). `ScheduleMatcher` holds
+   an `IMatchingStrategy` and never knows which concrete strategy it's running.
+   `evidence/divergence_demo` contains a constructed dataset proving the two
+   strategies produce different, individually-correct schedules from identical input.
+2. **Output rendering** — `ScheduleOutputHandler`, implemented by `ConsolePrinter`
+   (writes to `stdout`) and `TextFileFormatter` (writes to a file). Same interface,
+   swappable at the call site.
 
-### Why this is useful
-- The scheduling engine can support different policies without changing its core structure.
-- This makes the design more scalable and reusable.
+### Facade Pattern
 
-### What to improve
-- The current strategy selection is still fairly simple. A more advanced configuration layer could allow the user to choose strategies through a more flexible menu or configuration file.
+`ScheduleManager` (and, inside it, `SchedulingService`) hides the registries,
+persistence, matching engine, and schedule storage behind one simple interface for
+`MenuController` to call, so the UI layer never needs to know about `ScheduleMatcher`,
+`ScheduleRepository`, or `SystemDataService` directly.
 
-### Adapter / Facade Pattern
-The input and service layers also reflect adapter/facade-style design.
+*(Earlier drafts of this document described `UserInputParser` as an Adapter. On
+review that's not accurate — it doesn't convert between incompatible interfaces, it's
+a thin pass-through reusing `PassengerParser`/`ShuttleParser` for menu-typed input.
+Corrected here rather than left as an over-claim.)*
 
-### What has been done
-- UserInputParser adapts raw input from the menu into the parser layer.
-- SystemDataService acts as a façade that coordinates loading, editing, saving, and archive creation.
+## 4. Polymorphism
 
-### What to improve
-- These layers could be made even more cohesive by introducing clearer abstractions for persistence and data access.
+Part 1 feedback specifically noted that polymorphism existed technically but
+contributed little to actual behaviour, since collections were always accessed
+through their concrete types. This has been addressed directly:
 
-## 4. Layered architecture
+- `Entity::isValid()` is now part of the base interface (pure virtual), not something
+  `Passenger` and `ShuttleVehicle` each happen to define independently.
+- `ScheduleManager::getAllEntities()` returns a genuinely mixed
+  `vector<const Entity*>` containing both Passengers and ShuttleVehicles.
+- `ScheduleOutputHandler::writeEntityOverview()` loops over that single mixed
+  collection once, calling `getType()`/`isValid()`/`getDescription()` purely through
+  the base pointer — the concrete type is never checked, only resolved by the vtable
+  at runtime.
 
-### What has been done
-- The business logic for matching and schedule generation is separated from the console UI.
-- The UI layer now focuses on reading user input and displaying output.
-- Parser and formatter layers are isolated so data can be processed consistently from files, console input, or saved archives.
+The matching engine (`MinimumDispatchStrategy`/`EarliestArrivalStrategy`)
+deliberately still uses the typed `PassengerList`/`ShuttleList` registries rather than
+`vector<Entity*>`. Both algorithms genuinely need type-specific data
+(`getGroupSize()`, `getMaxSeats()`) that isn't on the shared `Entity` interface;
+forcing that data through downcasting would be polymorphism in name only, and would
+make the matching code worse, not better.
 
-### Why this helps
-- Business logic can be tested without depending on the UI.
-- The system is easier to evolve if new input or output channels are introduced later.
+## 5. Data modelling (fixing primitive obsession)
 
-### What to improve
-- A stronger separation between application services and domain entities would make the architecture even cleaner.
-- More test coverage across the service layer would further validate the design.
+Part 1 feedback noted heavy reliance on raw `string`/`int` fields for domain concepts.
+`Destination`, `PassengerID`, `VehicleID`, and `Time`/`OperationalTime` are now real
+value objects with their own validation (`isValid()`), centralizing what used to be
+scattered string/number checks and giving each concept a single place to change if
+its rules change.
 
-## 5. Summary
+`PassengerList`/`ShuttleList` compose a `Registry<T>` rather than inheriting from it
+(previously `class ShuttleList : public Registry<ShuttleVehicle> {}`), addressing the
+specific Part 1 note that "PassengerList uses a Registry" is a more accurate model
+than "PassengerList is a Registry."
 
-### Completed
-- Refactored the system around a layered architecture.
-- Added strategy-based matching.
-- Introduced abstraction for output rendering.
-- Improved data handling and persistence behaviour.
-- Added a Mermaid UML for the current implementation.
+## 6. Summary
 
-### Remaining improvements
-- Add automated unit tests.
-- Improve dependency injection and configuration flexibility.
-- Reduce duplicated formatting logic.
-- Expand parser validation and input handling for more complex user input.
+### Completed this iteration
+- Fixed the two matching algorithms so they genuinely differ (previously identical).
+- Broke up the `ScheduleList` god-class into four single-purpose classes.
+- Added real polymorphism via `getAllEntities()` / `writeEntityOverview()`.
+- Switched `Registry` composition instead of inheritance.
+- Fixed several data-integrity bugs: CRLF corruption silently defaulting every
+  shuttle to "Small," garbage input being silently coerced into valid-looking
+  defaults instead of failing visibly, and a save/reload round-trip bug.
+- Added entry-level input validation and load-time warnings for malformed data.
+- Corrected the UML diagram and this document to match the code, rather than
+  describing an aspirational design.
+
+### Remaining, acknowledged limitations
+- No automated test suite — verification in this round was manual/exploratory,
+  not exhaustive.
+- `ShuttleModel` construction violates OCP (string-matched if/else chain).
+- `MenuController` still couples directly to `cin` and to concrete `ConsolePrinter`/
+  `TextFileFormatter` rather than depending on injected abstractions.
+- No dependency-injection mechanism; services are owned as members, not injected.

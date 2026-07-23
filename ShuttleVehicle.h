@@ -8,7 +8,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 class ShuttleVehicle : public DriverlessVehicle {
 private:
     VehicleID vehicleId;

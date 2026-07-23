@@ -53,7 +53,6 @@ bool parseTimeValue(const string& raw, int& hour, int& minute) {
 }
 }
 
-// Author: [Your Name]
 // Purpose: Implements the validated operational time domain object.
 OperationalTime::OperationalTime(int hour, int minute, unique_ptr<TimeFormatter> formatter)
     : Time(hour, minute, std::move(formatter)) {}

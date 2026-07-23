@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <sstream>
 
-// Author: [Your Name]
 // Purpose: Implements the 12-hour AM/PM formatter strategy.
 string AMPMTimeFormatter::format(int hour, int minute) const {
     string suffix = (hour >= 12) ? "PM" : "AM";

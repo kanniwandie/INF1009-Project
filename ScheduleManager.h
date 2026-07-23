@@ -11,7 +11,6 @@ using namespace std;
 
 class Entity;
 
-// Author: [Your Name]
 // Purpose: Top-level application service. Replaces the former ScheduleList
 // god-class: instead of one class owning the registries, persistence, AND the
 // matching algorithm, each concern now lives in its own class (SystemDataService,

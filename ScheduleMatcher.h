@@ -10,7 +10,6 @@ class PassengerList;
 class ShuttleList;
 class ScheduleRepository;
 
-// Author: [Your Name]
 // Purpose: Runs a pluggable IMatchingStrategy (Strategy Pattern) against the
 // passenger/shuttle registries and records results into a ScheduleRepository.
 // Extracted from the former ScheduleList god-class so "how matching is executed"

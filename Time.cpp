@@ -1,6 +1,5 @@
 #include "Time.h"
 
-// Author: [Your Name]
 // Purpose: Implements the common base behavior for all time-domain classes.
 Time::Time(int hour, int minute, unique_ptr<TimeFormatter> formatter)
     : hour(hour), minute(minute), formatter(std::move(formatter)) {}

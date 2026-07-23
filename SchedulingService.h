@@ -9,7 +9,6 @@ using namespace std;
 class PassengerList;
 class ShuttleList;
 
-// Author: [Your Name]
 // Purpose: Facade combining the matching engine (ScheduleMatcher) and schedule
 // storage (ScheduleRepository) so callers depend on one small surface instead of
 // two collaborating objects.

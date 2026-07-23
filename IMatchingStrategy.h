@@ -8,7 +8,6 @@ class PassengerList;
 class ShuttleList;
 class ScheduleRepository;
 
-// Author: [Your Name]
 // Purpose: Strategy Pattern interface for computing the full set of passenger-shuttle
 // schedules. Concrete strategies own the entire matching algorithm (not just a single
 // pairwise rule) because "minimum dispatch" and "earliest arrival" are genuinely

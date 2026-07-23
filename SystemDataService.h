@@ -6,7 +6,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 class SystemDataService {
 private:
     DataExporter exporter;

@@ -5,7 +5,6 @@
 #include "ShuttleVehicle.h"
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: Small immutable value object representing one matched passenger-shuttle
 // pairing. Does not own the Passenger/ShuttleVehicle it points to; ownership stays
 // with the registries in ScheduleManager.

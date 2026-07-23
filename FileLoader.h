@@ -10,7 +10,6 @@ class ShuttleVehicle;
 class PassengerList;
 class ShuttleList;
 
-// Author: [Your Name]
 class FileLoader {
 public:
     virtual ~FileLoader() = default;

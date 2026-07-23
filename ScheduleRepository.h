@@ -5,7 +5,6 @@
 #include <vector>
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: Owns the collection of currently active (computed) schedules. Extracted
 // from the former ScheduleList god-class so that "where schedules are stored" is a
 // single, focused responsibility (SRP), independent of how they were computed.

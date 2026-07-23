@@ -6,7 +6,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: Abstract base class for time domain objects.
 class Time {
 protected:

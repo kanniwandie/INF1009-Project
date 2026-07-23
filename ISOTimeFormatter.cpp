@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <sstream>
 
-// Author: [Your Name]
 // Purpose: Implements the 24-hour ISO formatter strategy.
 string ISOTimeFormatter::format(int hour, int minute) const {
     stringstream stream;

@@ -4,7 +4,6 @@
 #include <string>
 using namespace std;
 
-// Author: [Your Name]
 // Purpose: Strategy interface for formatting clock values.
 class TimeFormatter {
 public:
