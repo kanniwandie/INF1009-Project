@@ -187,7 +187,7 @@ void MenuController::handleDataManagementMenu() {
         switch (choice) {
         case 1: {
             int groupSize = 1;
-            cout << "Enter ID, Destination, Time, and Group Size (1-15) (separated by spaces): ";
+            cout << "Enter ID, Destination, Time and Group Size (1-15) (Eg. P01 School 7:20am 5 -> separated by space):";
             cin >> id >> dest >> time >> groupSize;
             if (cin.fail()) {
                 cin.clear();
@@ -225,7 +225,7 @@ void MenuController::handleDataManagementMenu() {
         }
         case 2: {
             string model = "Small";
-            cout << "Enter ID, Charging Point, Time, and Model (Small/Family/Premium) (separated by spaces): ";
+            cout << "Enter ID, Charging Point, Time, and Model (Small/Family/Premium) (Eg. S01 School 7:15am Small -> separated by spaces): ";
             cin >> id >> dest >> time >> model;
             // Convert small, SMALL, family, etc. into the standard format.
             model = normalizeModel(model);
@@ -267,7 +267,7 @@ void MenuController::handleDataManagementMenu() {
                 cout << "Error: Passenger ID '" << editId << "' does not exist.\n";
             } else {
                 cout << "Found " << passenger->getDescription() << "\n";
-                cout << "Enter New Destination, New Time, and New Group Size (1-15) (separated by space): ";
+                cout << "Enter New Destination, New Time, and New Group Size (1-15) (Home 8:00pm 4 -> separated by space): ";
                 cin >> newDest >> newTime >> newGroupSize;
 
                 if (cin.fail()) {
@@ -309,7 +309,7 @@ void MenuController::handleDataManagementMenu() {
                 cout << "Error: Shuttle ID '" << editId << "' does not exist.\n";
             } else {
                 cout << "Found " << shuttle->getDescription() << "\n";
-                cout << "Enter New Charging Point, New Time, and New Model (Small/Family/Premium) (separated by space): ";
+                cout << "Enter New Charging Point, New Time, and New Model (Small/Family/Premium) (Home 7:00pm Family -> separated by space): ";
                 cin >> newPoint >> newTime >> newModel;
 
                 // Convert the input into the standard model name.
