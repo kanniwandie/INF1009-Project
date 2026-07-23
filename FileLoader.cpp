@@ -43,15 +43,17 @@ string normalizeModel(string model) {
 
 namespace {
 Passenger createPassengerFromFields(const string& id, const string& destination, const string& time, const string& groupSizeField) {
-    int groupSize;
+    int groupSize = -1;
+    string cleanedGroupSize = trim(groupSizeField);
+
     try {
-        groupSize = stoi(trim(groupSizeField));
-    } catch (...) {
-        // Deliberately NOT defaulting to a plausible-looking group size like 1
-        // here: that would make a corrupted/non-numeric field (e.g. "abc") in
-        // a data file silently masquerade as a legitimate booking. -1 fails
-        // Passenger::isValid()'s groupSize > 0 check, so the entity is
-        // correctly reported as invalid instead of quietly accepted.
+        size_t processedCharacters = 0;
+        int parsedGroupSize = stoi(cleanedGroupSize, &processedCharacters);
+        if (processedCharacters == cleanedGroupSize.size()) {
+            groupSize = parsedGroupSize;
+        }
+    }
+    catch (...) {
         groupSize = -1;
     }
     return Passenger(trim(id), trim(destination), trim(time), groupSize);

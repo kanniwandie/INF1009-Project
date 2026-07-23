@@ -4,7 +4,7 @@
 #include <utility>
 using namespace std;
 
-bool ScheduleManager::loadAllSystemData(const string& folder) {
+LoadResult ScheduleManager::loadAllSystemData(const string& folder) {
     passengerRegistry.clear();
     shuttleRegistry.clear();
     return SystemDataService::loadInitialData(passengerRegistry, shuttleRegistry, folder);

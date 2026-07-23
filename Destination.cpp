@@ -1,7 +1,7 @@
 #include "Destination.h"
 #include <cctype>
 
-Destination::Destination(const string& value) : value(value) {}
+Destination::Destination(const string& initialValue) : value(initialValue) {}
 
 void Destination::setValue(const string& newValue) {
     value = newValue;

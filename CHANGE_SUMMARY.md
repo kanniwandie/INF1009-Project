@@ -1,5 +1,41 @@
 # Change Summary
 
+## Part 2 Fixes (round 7)
+ 
+- **Stricter, regex-based time parsing.** `OperationalTime::parseTimeValue()` now uses
+  `std::regex` (`^(\d{1,2}):(\d{2})\s*([aApP][mM])$`) instead of manual string
+  manipulation, rejecting more malformed inputs than before (e.g. out-of-range 12-hour
+  values). Verified the spec's midnight-rollover example (S01 11:59pm / P06 12:05am)
+  and the algorithm-divergence proof still produce identical, correct results after
+  this change.
+- **Case-insensitive shuttle model matching.** `normalizeModel()` (added in both
+  `FileLoader.cpp` and `MenuController.cpp`) accepts `small`/`SMALL`/`Small` etc. and
+  normalizes to the canonical `Small`/`Family`/`Premium` token before validation,
+  rather than rejecting anything not exactly title-case.
+- **Stricter group-size parsing.** Now requires the *entire* field to be numeric
+  (checks `stoi`'s `processedCharacters` against the full string length) rather than
+  silently accepting a numeric prefix like "5abc" as 5.
+- **Invalid entities rejected before insertion**, not after. `FileLoader`'s parsers now
+  construct the entity, check `isValid()`, and only call `registry.add()` if it passes
+  - previously, invalid entities (e.g. a malformed row) were added to the registry
+  and only showed as "Invalid" downstream. Net effect: malformed rows no longer occupy
+  a slot in "Display All Data" at all; they're reported once via the load-time warning
+  and then fully excluded. Both are defensible; this is the stricter of the two.
+- **`clearSchedules()` now also resets assignment flags** on both registries, not just
+  the schedule repository. Fixes a real staleness bug: previously, clearing schedules
+  (e.g. before entering the CRUD menu) left passengers/shuttles marked "Assigned" from
+  the last computed run even though no schedule currently existed.
+- **Double-enforced Requirement 10 (never overwrite original data files).**
+  `DataExporter::savePassengerData`/`saveShuttleData` now independently check
+  `std::filesystem::exists()` and refuse to write if the target file already exists,
+  in addition to the existing check in `MenuController::handleSaveSystemData()`.
+- **Portable timestamp generation.** Schedule archive headers now use
+  `localtime_s`/`localtime_r` (platform-guarded) instead of the non-thread-safe
+  `localtime()`.
+- **`TextFileFormatter::saveSchedules()`** added as a new method returning `bool`, so
+  archive-save failures are now reported to the user instead of silently assumed to
+  succeed; `writeSchedules()` (the interface method) delegates to it.
+
 ## Part 2 Fixes (round 6 - exhaustive input testing)
 
 Testing deliberately malformed inputs (empty files, garbage CSV rows, non-numeric

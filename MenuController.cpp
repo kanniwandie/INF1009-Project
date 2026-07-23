@@ -59,8 +59,15 @@ int MenuController::getMenuChoice(int min, int max) {
 }
 
 void MenuController::loadDataFiles(const string& folder) {
-    if (manager.loadAllSystemData(folder)) {
+    LoadResult result = manager.loadAllSystemData(folder);
+
+    if (result.allLoaded()) {
         cout << "[RAM Storage] Successfully loaded data into memory.\n\n";
+    } else if (result.anyLoaded()) {
+        cout << "[Warning] Partially loaded data: "
+             << (result.passengerLoaded ? "passenger.txt OK, shuttle.txt could not be loaded"
+                                         : "shuttle.txt OK, passenger.txt could not be loaded")
+             << ". The data that did load is available; the rest is empty.\n\n";
     } else {
         cout << "[Warning] Could not load data files. Starting with empty storage.\n\n";
     }

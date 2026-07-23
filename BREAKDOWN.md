@@ -1,9 +1,6 @@
 # Design Breakdown – Part 2 Implementation
 
 ## 1. Architecture and design principles
-# Design Breakdown — Part 2 Implementation
-
-## 1. Architecture and design principles
 
 The system is layered to separate UI, application orchestration, domain logic, and
 infrastructure concerns.
@@ -97,8 +94,9 @@ Real in one place, not fully applied in another:
    minimize the number of shuttles dispatched) and `EarliestArrivalStrategy` (picks,
    per passenger, whichever eligible shuttle arrives soonest). `ScheduleMatcher` holds
    an `IMatchingStrategy` and never knows which concrete strategy it's running.
-   `evidence/divergence_demo` contains a constructed dataset proving the two
-   strategies produce different, individually-correct schedules from identical input.
+   Verified with a constructed dataset (one passenger, two eligible shuttles of
+   different capacity/arrival time) that the two strategies produce different,
+   individually-correct schedules from identical input.
 2. **Output rendering** — `ScheduleOutputHandler`, implemented by `ConsolePrinter`
    (writes to `stdout`) and `TextFileFormatter` (writes to a file). Same interface,
    swappable at the call site.
@@ -150,7 +148,31 @@ its rules change.
 specific Part 1 note that "PassengerList uses a Registry" is a more accurate model
 than "PassengerList is a Registry."
 
-## 6. Summary
+## 6. Round 7 hardening
+
+Further work beyond the initial round of fixes, focused on input robustness:
+
+- Time parsing rewritten to use `std::regex` with a strict format
+  (`^(\d{1,2}):(\d{2})\s*([aApP][mM])$`), rejecting more malformed input than the
+  original manual-parsing approach did.
+- Shuttle model matching made case-insensitive (`normalizeModel()`), applied
+  consistently at both file-load time and interactive menu input.
+- Group size parsing tightened to require the entire field be numeric, rather than
+  accepting a numeric prefix (e.g. "5abc" no longer silently becomes 5).
+- File parsers now validate an entity (`isValid()`) *before* inserting it into a
+  registry, rather than inserting unconditionally and relying on downstream code to
+  notice it's invalid. This is a deliberate design shift from the previous approach:
+  invalid rows are now fully excluded rather than visible-but-flagged.
+- `ScheduleManager::clearSchedules()` now resets both registries' assignment flags,
+  not just the schedule repository — fixes a staleness bug where entities stayed
+  marked "Assigned" after their computed schedule was cleared.
+- Requirement 10's "never overwrite existing files" rule is now enforced at two
+  independent layers: `MenuController` and `DataExporter` each check
+  `std::filesystem::exists()` before writing.
+- Schedule archive timestamps now use platform-appropriate thread-safe calls
+  (`localtime_s`/`localtime_r`) instead of the non-thread-safe `localtime()`.
+
+## 7. Summary
 
 ### Completed this iteration
 - Fixed the two matching algorithms so they genuinely differ (previously identical).
@@ -163,6 +185,8 @@ than "PassengerList is a Registry."
 - Added entry-level input validation and load-time warnings for malformed data.
 - Corrected the UML diagram and this document to match the code, rather than
   describing an aspirational design.
+- (Round 7) Hardened input parsing, closed a schedule-clearing staleness bug, and
+  double-enforced the no-overwrite rule for saved data files.
 
 ### Remaining, acknowledged limitations
 - No automated test suite — verification in this round was manual/exploratory,

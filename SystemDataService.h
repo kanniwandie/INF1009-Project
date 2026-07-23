@@ -6,12 +6,23 @@
 #include <string>
 using namespace std;
 
+// Reports each data file's load status independently. A single bool return here
+// previously meant a partial load (e.g. only passenger.txt present) either silently
+// looked like full success (old "||" behavior) or falsely looked like total failure
+// (old "&&" behavior) even when one file's data loaded and is genuinely usable.
+struct LoadResult {
+    bool passengerLoaded = false;
+    bool shuttleLoaded = false;
+    bool allLoaded() const { return passengerLoaded && shuttleLoaded; }
+    bool anyLoaded() const { return passengerLoaded || shuttleLoaded; }
+};
+
 class SystemDataService {
 private:
     DataExporter exporter;
 
 public:
-    static bool loadInitialData(PassengerList& passengers, ShuttleList& shuttles, const string& folder = "");
+    static LoadResult loadInitialData(PassengerList& passengers, ShuttleList& shuttles, const string& folder = "");
 
     bool editPassenger(PassengerList& passengers, const string& id, const string& newDestination, const string& newTime, int newGroupSize) const;
     bool editShuttle(ShuttleList& shuttles, const string& id, const string& newDestination, const string& newTime, const string& newModel) const;

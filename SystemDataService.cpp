@@ -14,16 +14,17 @@ string buildPath(const string& folder, const string& filename) {
 }
 }
 
-bool SystemDataService::loadInitialData(PassengerList& passengers, ShuttleList& shuttles, const string& folder) {
+LoadResult SystemDataService::loadInitialData(PassengerList& passengers, ShuttleList& shuttles, const string& folder) {
     passengers.clear();
     shuttles.clear();
 
     PassengerParser passengerParser;
     ShuttleParser shuttleParser;
 
-    bool passengerLoaded = passengerParser.load(buildPath(folder, "passenger.txt"), passengers, shuttles);
-    bool shuttleLoaded = shuttleParser.load(buildPath(folder, "shuttle.txt"), passengers, shuttles);
-    return passengerLoaded && shuttleLoaded;
+    LoadResult result;
+    result.passengerLoaded = passengerParser.load(buildPath(folder, "passenger.txt"), passengers, shuttles);
+    result.shuttleLoaded = shuttleParser.load(buildPath(folder, "shuttle.txt"), passengers, shuttles);
+    return result;
 }
 
 bool SystemDataService::editPassenger(PassengerList& passengers, const string& id, const string& newDestination, const string& newTime, int newGroupSize) const {

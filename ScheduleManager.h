@@ -24,7 +24,7 @@ private:
     SchedulingService schedulingService{};
 
 public:
-    bool loadAllSystemData(const string& folder = "");
+    LoadResult loadAllSystemData(const string& folder = "");
 
     PassengerList& getPassengerRegistry();
     ShuttleList& getShuttleRegistry();

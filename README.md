@@ -57,6 +57,18 @@ INF1009/
 └── UML.mermaid                      # Class diagram source (paste into mermaid.live to export PDF)
 ```
 
+## Build Requirements
+
+- **C++17 or newer** (uses `std::filesystem`, structured bindings, and other C++17
+  standard library features throughout - e.g. `DataExporter`'s and
+  `MenuController::handleSaveSystemData()`'s existence checks). Verified building
+  clean with `-std=c++17` and `-std=c++20`, both with `-Wall -Wextra` and zero
+  warnings, using g++ 13.3.0.
+- No external dependencies - standard library only.
+- If using a compiler older than GCC 9 or an equivalent-era Clang, `<filesystem>` may
+  require linking `-lstdc++fs` explicitly; not needed on any reasonably current
+  toolchain.
+  
 ## Build
 
 ```bash

@@ -9,7 +9,7 @@ private:
     string value;
 
 public:
-    Destination(const string& value = "");
+    Destination(const string& initialValue = "");
 
     void setValue(const string& newValue);
     bool isValid() const;
