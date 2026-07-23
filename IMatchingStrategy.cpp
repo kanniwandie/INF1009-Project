@@ -21,13 +21,20 @@ int toMinutes(const Time& time) {
 // Minutes are treated on a circular 24-hour clock (mod 1440) so a shuttle at 11:59pm
 // correctly counts as a few minutes early for a passenger requesting 12:05am, since the
 // service day runs continuously from 6am to midnight without a hard reset at 00:00.
-bool isWithinArrivalWindow(const Time& shuttleTime, const Time& passengerTime) {
-    const int MINUTES_PER_DAY = 24 * 60;
-    int shuttleMinutes = toMinutes(shuttleTime);
-    int passengerMinutes = toMinutes(passengerTime);
+int getMinutesEarly(const Time& shuttleTime, const Time& passengerTime) {
+    constexpr int MINUTES_PER_DAY = 24 * 60;
 
-    int minutesEarly = ((passengerMinutes - shuttleMinutes) % MINUTES_PER_DAY + MINUTES_PER_DAY) % MINUTES_PER_DAY;
-    return minutesEarly <= ARRIVAL_WINDOW_MINUTES;
+    const int shuttleMinutes = toMinutes(shuttleTime);
+    const int passengerMinutes = toMinutes(passengerTime);
+
+    return (passengerMinutes - shuttleMinutes + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+}
+
+bool isWithinArrivalWindow(const Time& shuttleTime, const Time& passengerTime) {
+    return getMinutesEarly(
+        shuttleTime,
+        passengerTime
+    ) <= ARRIVAL_WINDOW_MINUTES;
 }
 
 bool isEligiblePair(const Passenger& passenger, const ShuttleVehicle& shuttle) {
@@ -37,7 +44,7 @@ bool isEligiblePair(const Passenger& passenger, const ShuttleVehicle& shuttle) {
     return isWithinArrivalWindow(shuttle.getScheduledTimeObject(), passenger.getScheduledTimeObject());
 }
 
-} // namespace
+}
 
 void MinimumDispatchStrategy::match(PassengerList& passengers, ShuttleList& shuttles, ScheduleRepository& repository) const {
     vector<ShuttleVehicle*> candidates;
@@ -84,6 +91,7 @@ void EarliestArrivalStrategy::match(PassengerList& passengers, ShuttleList& shut
         if (passenger.getAssignedStatus() || !passenger.isValid()) continue;
 
         ShuttleVehicle* bestShuttle = nullptr;
+        int bestMinutesEarly = -1;
         for (size_t si = 0; si < shuttles.size(); ++si) {
             ShuttleVehicle& shuttle = shuttles[si];
             if (!isEligiblePair(passenger, shuttle)) continue;
@@ -94,11 +102,17 @@ void EarliestArrivalStrategy::match(PassengerList& passengers, ShuttleList& shut
             int used = usedCapacity.count(&shuttle) ? usedCapacity[&shuttle] : 0;
             if (used + passenger.getGroupSize() > model->getMaxSeats()) continue;
 
-            // Among all eligible shuttles, prefer the one arriving earliest -
-            // this minimizes the passenger's wait, even if a larger shuttle
-            // dispatch count results.
-            if (!bestShuttle || shuttle.getScheduledTimeObject().compare(bestShuttle->getScheduledTimeObject()) < 0) {
+            const int candidateMinutesEarly = getMinutesEarly(
+                shuttle.getScheduledTimeObject(),
+                passenger.getScheduledTimeObject()
+            );
+
+            // A larger value means an earlier arrival,
+            // while still being within the permitted 10 minutes.
+            if (!bestShuttle ||
+                candidateMinutesEarly > bestMinutesEarly) {
                 bestShuttle = &shuttle;
+                bestMinutesEarly = candidateMinutesEarly;
             }
         }
 

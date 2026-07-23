@@ -38,6 +38,7 @@ private:
 
 public:
     explicit TextFileFormatter(string path);
+    bool saveSchedules(const vector<Schedule>& schedules, const string& strategyName) const;
     void writeSchedules(const vector<Schedule>& schedules, const string& strategyName) const override;
     void writeUnassigned(const PassengerList& passengers, const ShuttleList& shuttles) const override;
     void writeAllData(const PassengerList& passengers, const ShuttleList& shuttles) const override;

@@ -46,6 +46,8 @@ const vector<Schedule>& ScheduleManager::getSchedules() const {
 
 void ScheduleManager::clearSchedules() {
     schedulingService.clearSchedules();
+    passengerRegistry.resetAssignments();
+    shuttleRegistry.resetAssignments();
 }
 
 bool ScheduleManager::savePassengerData(const string& path) const {

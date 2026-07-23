@@ -23,9 +23,20 @@ bool Passenger::isValid() const {
     // the time string was actually parseable at all: OperationalTime::parse()
     // uses hour = -1 as a sentinel specifically for "could not parse this,"
     // which a legitimately parsed time (0-23) can never produce.
-    return passengerId.isValid() && groupSize > 0 && groupSize <= 15 && destination.isValid()
-        && getScheduledTimeObject().getHour() >= 0;
-}
+    const Time& time = getScheduledTimeObject();
+
+    const bool validTime =
+        time.getHour() >= 0 &&
+        time.getHour() <= 23 &&
+        time.getMinute() >= 0 &&
+        time.getMinute() <= 59;
+
+    return passengerId.isValid() &&
+           groupSize >= 1 &&
+           groupSize <= 15 &&
+           destination.isValid() &&
+           validTime;
+} 
 
 bool Passenger::hasSameID(const PassengerID& other) const {
     return passengerId == other;

@@ -4,6 +4,10 @@
 #include <iostream>
 #include <limits>
 #include <cstdlib>
+#include <filesystem>
+#include <algorithm>
+#include <cctype>
+
 using namespace std;
 
 MenuController::MenuController(ScheduleManager& manager) : manager(manager) {
@@ -14,6 +18,29 @@ string MenuController::trim(const string& s) {
     if (start == string::npos) return "";
     size_t end = s.find_last_not_of(" \t\r\n");
     return s.substr(start, end - start + 1);
+}
+
+string MenuController::normalizeModel(string model) {
+    model = trim(model);
+
+    transform(model.begin(), model.end(), model.begin(), [](unsigned char ch) { 
+            return static_cast<char>(tolower(ch));
+        }
+    );
+
+    if (model == "small") {
+        return "Small";
+    }
+
+    if (model == "family") {
+        return "Family";
+    }
+
+    if (model == "premium") {
+        return "Premium";
+    }
+
+    return "";
 }
 
 int MenuController::getMenuChoice(int min, int max) {
@@ -70,8 +97,18 @@ void MenuController::handleSaveArchive() const {
     cin >> filename;
 
     TextFileFormatter formatter(filename);
-    formatter.writeSchedules(manager.getSchedules(), manager.getStrategyName());
-    cout << "Route plan saved to " << filename << "\n";
+
+    if (formatter.saveSchedules(
+            manager.getSchedules(),
+            manager.getStrategyName()
+        )) {
+        cout << "Route plan saved to "
+            << filename << "\n";
+    }
+    else {
+        cout << "Error: Could not save route plan to "
+            << filename << "\n";
+    }
 }
 
 void MenuController::handleUnassignedDisplay() const {
@@ -87,6 +124,19 @@ void MenuController::handleSaveSystemData() const {
     cin >> passengerPath;
     cout << "Enter a NEW filename for shuttle data (e.g. shuttle_updated.txt): ";
     cin >> shuttlePath;
+
+    if (passengerPath == shuttlePath) {
+        cout << "Error: Passenger and shuttle files must use "
+            << "different filenames.\n";
+        return;
+    }
+
+    if (std::filesystem::exists(passengerPath) ||
+        std::filesystem::exists(shuttlePath)) {
+        cout << "Error: One or both filenames already exist. "
+            << "Enter new filenames.\n";
+        return;
+    }
 
     bool passengerSaved = manager.savePassengerData(passengerPath);
     bool shuttleSaved = manager.saveShuttleData(shuttlePath);
@@ -170,12 +220,14 @@ void MenuController::handleDataManagementMenu() {
             string model = "Small";
             cout << "Enter ID, Charging Point, Time, and Model (Small/Family/Premium) (separated by spaces): ";
             cin >> id >> dest >> time >> model;
+            // Convert small, SMALL, family, etc. into the standard format.
+            model = normalizeModel(model);
             if (sReg.containsId(id)) {
                 cout << "Error: Shuttle ID '" << id << "' already exists.\n";
                 break;
             }
-            if (model != "Small" && model != "Family" && model != "Premium") {
-                cout << "Error: Model must be exactly one of Small, Family, or Premium (got '" << model << "'). Entry rejected.\n";
+            if (model.empty()) {
+                cout << "Error: Model must be Small, Family, or Premium. " << "Entry rejected.\n";
                 break;
             }
             if (trim(dest).empty()) {
@@ -253,8 +305,11 @@ void MenuController::handleDataManagementMenu() {
                 cout << "Enter New Charging Point, New Time, and New Model (Small/Family/Premium) (separated by space): ";
                 cin >> newPoint >> newTime >> newModel;
 
-                if (newModel != "Small" && newModel != "Family" && newModel != "Premium") {
-                    cout << "Error: Model must be exactly one of Small, Family, or Premium (got '" << newModel << "'). Edit cancelled.\n";
+                // Convert the input into the standard model name.
+                newModel = normalizeModel(newModel);
+
+                if (newModel.empty()) {
+                    cout << "Error: Model must be Small, Family, or Premium. " << "Edit cancelled.\n";
                     break;
                 }
                 if (trim(newPoint).empty()) {

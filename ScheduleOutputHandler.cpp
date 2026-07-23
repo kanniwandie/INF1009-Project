@@ -13,13 +13,28 @@
 namespace {
 string currentTimestamp() {
     time_t now = time(nullptr);
-    tm* localTime = localtime(&now);
-    if (localTime == nullptr) {
+    tm localTime{};
+
+#if defined(_WIN32)
+    if (localtime_s(&localTime, &now) != 0) {
+        return "unknown";
+    }
+#else
+    if (localtime_r(&now, &localTime) == nullptr) {
+        return "unknown";
+    }
+#endif
+
+    char buffer[20]{};
+
+    if (strftime(
+            buffer,
+            sizeof(buffer),
+            "%Y-%m-%d %H:%M:%S",
+            &localTime) == 0) {
         return "unknown";
     }
 
-    char buffer[20];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localTime);
     return string(buffer);
 }
 
@@ -76,26 +91,59 @@ void ConsolePrinter::writeUnassigned(const PassengerList& passengers, const Shut
 
 TextFileFormatter::TextFileFormatter(string path) : outputPath(std::move(path)) {}
 
-void TextFileFormatter::writeSchedules(const vector<Schedule>& schedules, const string& strategyName) const {
+bool TextFileFormatter::saveSchedules(const vector<Schedule>& schedules, const string& strategyName) const {
     ofstream file(outputPath);
+
     if (!file.is_open()) {
-        cerr << "Unable to write schedule output to " << outputPath << "\n";
-        return;
+        cerr << "Unable to write schedule output to "
+             << outputPath << "\n";
+        return false;
     }
 
     file << "====================================================================================\n";
     file << "ACTIVE SCHEDULE PLAN (Strategy: " << strategyName << ")\n";
     file << "Timestamp Generated: " << currentTimestamp() << "\n";
     file << "====================================================================================\n";
-    file << left << setw(12) << "Shuttle ID" << "| " << left << setw(18) << "Destination" << "| " << left << setw(14) << "Shuttle Time" << "| " << left << setw(18) << "Model" << "| " << left << setw(12) << "Passenger ID" << "| " << left << setw(18) << "Passenger Time" << "| " << "Group Size\n";
+
+    file << left
+         << setw(12) << "Shuttle ID" << "| "
+         << setw(18) << "Destination" << "| "
+         << setw(14) << "Shuttle Time" << "| "
+         << setw(18) << "Model" << "| "
+         << setw(12) << "Passenger ID" << "| "
+         << setw(18) << "Passenger Time" << "| "
+         << "Group Size\n";
+
     file << string(112, '-') << "\n";
 
     for (const auto& schedule : schedules) {
         const Passenger* passenger = schedule.getPassenger();
+
         const ShuttleVehicle* shuttle = schedule.getShuttle();
-        if (!passenger || !shuttle) continue;
-        file << left << setw(12) << shuttle->getID() << "| " << left << setw(18) << shuttle->getDestination() << "| " << left << setw(14) << formatTime(shuttle->getScheduledTimeObject()) << "| " << left << setw(18) << modelName(*shuttle) << "| " << left << setw(12) << passenger->getID() << "| " << left << setw(18) << formatTime(passenger->getScheduledTimeObject()) << "| " << passenger->getGroupSize() << "\n";
+
+        if (!passenger || !shuttle) {
+            continue;
+        }
+
+        file << left
+             << setw(12) << shuttle->getID() << "| "
+             << setw(18) << shuttle->getDestination() << "| "
+             << setw(14)
+             << formatTime(shuttle->getScheduledTimeObject())
+             << "| "
+             << setw(18) << modelName(*shuttle) << "| "
+             << setw(12) << passenger->getID() << "| "
+             << setw(18)
+             << formatTime(passenger->getScheduledTimeObject())
+             << "| "
+             << passenger->getGroupSize() << "\n";
     }
+
+    return file.good();
+}
+
+void TextFileFormatter::writeSchedules(const vector<Schedule>& schedules, const string& strategyName) const {
+    (void)saveSchedules(schedules, strategyName);
 }
 
 void ConsolePrinter::writeAllData(const PassengerList& passengers, const ShuttleList& shuttles) const {

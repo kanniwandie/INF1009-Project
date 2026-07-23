@@ -2,6 +2,7 @@
 #include "AMPMTimeFormatter.h"
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 namespace {
 string trim(const string& value) {
@@ -12,47 +13,63 @@ string trim(const string& value) {
 }
 
 bool parseTimeValue(const string& raw, int& hour, int& minute) {
-    string value = trim(raw);
-    if (value.empty()) return false;
+    const string value = trim(raw);
 
-    transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(tolower(ch));
-    });
+    static const regex timePattern(
+        R"(^(\d{1,2}):(\d{2})\s*([aApP][mM])$)"
+    );
 
-    bool isAm = true;
-    size_t suffixPos = value.find("am");
-    if (suffixPos != string::npos) {
-        value.erase(suffixPos, 2);
-    } else {
-        suffixPos = value.find("pm");
-        if (suffixPos != string::npos) {
-            isAm = false;
-            value.erase(suffixPos, 2);
-        }
-    }
+    smatch match;
 
-    value.erase(remove(value.begin(), value.end(), ' '), value.end());
-
-    size_t separatorPos = string::npos;
-    if ((separatorPos = value.find(':')) == string::npos) {
-        separatorPos = value.find('.');
-    }
-
-    if (separatorPos == string::npos) return false;
-
-    try {
-        hour = stoi(value.substr(0, separatorPos));
-        minute = stoi(value.substr(separatorPos + 1));
-    } catch (...) {
+    if (!regex_match(value, match, timePattern)) {
         return false;
     }
 
-    if (!isAm && hour < 12) hour += 12;
-    if (isAm && hour == 12) hour = 0;
-    return true;
-}
+    try {
+        int hour12 = stoi(match[1].str());
+        minute = stoi(match[2].str());
+
+        char period = static_cast<char>(
+            tolower(
+                static_cast<unsigned char>(
+                    match[3].str()[0]
+                )
+            )
+        );
+
+        if (minute < 0 || minute > 59) {
+            return false;
+        }
+
+        if (hour12 == 0) {
+            // 00:xxpm is not valid.
+            if (period != 'a') {
+                return false;
+            }
+
+            hour = 0;
+            return true;
+        }
+
+        if (hour12 < 1 || hour12 > 12) {
+            return false;
+        }
+
+        // Convert 12-hour time to 24-hour time.
+        hour = hour12 % 12;
+
+        if (period == 'p') {
+            hour += 12;
+        }
+
+        return true;
+    }
+    catch (...) {
+        return false;
+    }
 }
 
+}
 // Purpose: Implements the validated operational time domain object.
 OperationalTime::OperationalTime(int hour, int minute, unique_ptr<TimeFormatter> formatter)
     : Time(hour, minute, std::move(formatter)) {}
@@ -82,15 +99,11 @@ bool OperationalTime::isValid() const {
         return false;
     }
 
-    if (hour < 6 || hour > 24) {
-        return false;
+    if (hour == 0 && minute == 0) {
+        return true;
     }
 
-    if (hour == 24 && minute != 0) {
-        return false;
-    }
-
-    return true;
+    return hour >= 6 && hour <= 23;
 }
 
 string OperationalTime::toString() const {

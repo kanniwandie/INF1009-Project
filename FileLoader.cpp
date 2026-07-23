@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 namespace {
 string trim(const string& value) {
@@ -13,6 +15,29 @@ string trim(const string& value) {
     if (start == string::npos) return "";
     size_t end = value.find_last_not_of(" \t\r\n");
     return value.substr(start, end - start + 1);
+}
+
+string normalizeModel(string model) {
+    model = trim(model);
+
+    transform(model.begin(), model.end(), model.begin(), [](unsigned char ch) {
+            return static_cast<char>(tolower(ch));
+        }
+    );
+
+    if (model == "small") {
+        return "Small";
+    }
+
+    if (model == "family") {
+        return "Family";
+    }
+
+    if (model == "premium") {
+        return "Premium";
+    }
+
+    return "";
 }
 }
 
@@ -73,7 +98,13 @@ bool PassengerParser::parse(const string& rawEntry, PassengerList& passengers, S
         return false;
     }
 
-    return passengers.add(createPassengerFromFields(id, destination, time, groupSizeField));
+    Passenger passenger = createPassengerFromFields(id, destination, time, groupSizeField);
+
+    if (!passenger.isValid()) {
+        return false;
+    }
+
+    return passengers.add(passenger); 
 }
 
 bool ShuttleParser::load(const string& path, PassengerList& passengers, ShuttleList& shuttles) {
@@ -95,11 +126,28 @@ bool ShuttleParser::load(const string& path, PassengerList& passengers, ShuttleL
 
 bool ShuttleParser::parse(const string& rawEntry, PassengerList& passengers, ShuttleList& shuttles) const {
     (void)passengers;
+
     stringstream ss(rawEntry);
     string id, destination, time, modelName;
-    if (!getline(ss, id, ',') || !getline(ss, destination, ',') || !getline(ss, time, ',') || !getline(ss, modelName, ',')) {
+
+    if (!getline(ss, id, ',') ||
+        !getline(ss, destination, ',') ||
+        !getline(ss, time, ',') ||
+        !getline(ss, modelName, ',')) {
         return false;
     }
 
-    return shuttles.add(createShuttleFromFields(id, destination, time, modelName));
+    modelName = normalizeModel(modelName);
+
+    if (modelName.empty()) {
+        return false;
+    }
+
+    ShuttleVehicle shuttle = createShuttleFromFields(id, destination, time, modelName);
+
+    if (!shuttle.isValid()) {
+        return false;
+    }
+
+    return shuttles.add(shuttle);
 }

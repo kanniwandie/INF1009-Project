@@ -15,7 +15,7 @@ using namespace std;
 class MenuController {
 private:
     ScheduleManager& manager;
-
+    static string normalizeModel(string model);
     void handleScheduleGeneration();
     void handleSaveArchive() const;
     void handleUnassignedDisplay() const;

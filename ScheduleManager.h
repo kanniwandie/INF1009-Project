@@ -18,10 +18,10 @@ class Entity;
 // simply wires them together (Facade Pattern) for the UI layer to use.
 class ScheduleManager {
 private:
-    PassengerList passengerRegistry;
-    ShuttleList shuttleRegistry;
-    SystemDataService dataService;
-    SchedulingService schedulingService;
+    PassengerList passengerRegistry{};
+    ShuttleList shuttleRegistry{};
+    SystemDataService dataService{};
+    SchedulingService schedulingService{};
 
 public:
     bool loadAllSystemData(const string& folder = "");
