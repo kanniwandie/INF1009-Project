@@ -24,11 +24,10 @@ public:
     virtual void writeUnassigned(const PassengerList& passengers, const ShuttleList& shuttles) const = 0;
     virtual void writeAllData(const PassengerList& passengers, const ShuttleList& shuttles) const = 0;
 
-    // Genuinely polymorphic: entities is a mixed collection of Passengers and
-    // ShuttleVehicles, exposed only through the shared Entity interface. This
-    // method (and its overrides) never knows or checks which concrete type any
-    // given element is - getType()/getDescription()/isValid() dispatch correctly
-    // at runtime for each element via virtual calls.
+    /**
+     * @brief Writes an overview of a mixed collection of entities through the shared Entity interface.
+     * @param entities A collection of passenger and shuttle entities exposed as Entity pointers.
+     */
     virtual void writeEntityOverview(const vector<const Entity*>& entities) const = 0;
 };
 

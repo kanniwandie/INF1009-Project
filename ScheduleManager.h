@@ -35,11 +35,10 @@ public:
     const PassengerList& getPassengerRegistry() const;
     const ShuttleList& getShuttleRegistry() const;
 
-    // Genuinely polymorphic view: Passenger and ShuttleVehicle objects are exposed
-    // here only through their shared Entity interface. A caller iterating this
-    // vector cannot tell (and does not need to know) which concrete type each
-    // element is - getDescription()/getType()/isValid() dispatch to the correct
-    // override at runtime for each element.
+    /**
+     * @brief Returns all entities as a polymorphic view through the shared Entity interface.
+     * @return Collection of entity pointers that can be handled uniformly at runtime.
+     */
     vector<const Entity*> getAllEntities() const;
 
     void setMatchingStrategy(unique_ptr<IMatchingStrategy> strategy);

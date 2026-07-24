@@ -13,12 +13,12 @@ using namespace std;
 class Passenger;
 class ShuttleVehicle;
 
-// Purpose: Generic in-memory store keyed by string ID. Kept deliberately generic and
-// domain-agnostic - it knows nothing about passengers or shuttles specifically, only
-// that T has getID()/setAssignedStatus(). PassengerList/ShuttleList below compose one
-// of these rather than inheriting from it (see the note on those classes).
 /**
  * @brief Generic in-memory collection that stores domain objects keyed by ID.
+ * @details The registry is intentionally domain-agnostic and only requires the stored
+ * type to expose identifier access and assignment-state mutation. PassengerList and
+ * ShuttleList compose this template instead of inheriting from it so the domain layer can
+ * add specialised behaviour without leaking implementation details into the generic container.
  * @author Lee Yu Huan
  */
 template <typename T>
@@ -86,14 +86,11 @@ public:
     }
 };
 
-// Purpose: The town's passenger roster. Composes a Registry<Passenger> (HAS-A) instead
-// of inheriting from it (IS-A). A PassengerList is a domain concept in its own right -
-// it is not, conceptually, "a kind of generic registry that happens to hold passengers".
-// Composition also means PassengerList is free to grow domain-specific behaviour later
-// without that behaviour leaking into the generic Registry template, and without a
-// consumer of PassengerList being able to slice it down to a bare Registry<Passenger>.
 /**
  * @brief Domain-specific container for passenger objects.
+ * @details PassengerList wraps a generic registry and exposes passenger-specific operations.
+ * This composition keeps the domain concept explicit and prevents the passenger collection
+ * from being treated as a bare generic registry.
  * @author Lee Yu Huan
  */
 class PassengerList {
@@ -114,10 +111,10 @@ public:
     void resetAssignments();
 };
 
-// Purpose: The town's shuttle roster. See PassengerList above for the composition
-// rationale - the same reasoning applies here.
 /**
  * @brief Domain-specific container for shuttle objects.
+ * @details ShuttleList wraps the generic registry with shuttle-specific operations and keeps
+ * the domain model explicit rather than exposing the storage implementation directly.
  * @author Lee Yu Huan
  */
 class ShuttleList {

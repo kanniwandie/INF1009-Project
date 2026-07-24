@@ -1,0 +1,99 @@
+classDiagram
+    direction TB
+
+    class Time {
+        <<abstract>>
+        # int hour
+        # int minute
+        - unique_ptr<TimeFormatter> formatter
+        + Time(int, int, unique_ptr<TimeFormatter>)
+        + isValid(): bool
+        + toString(): string
+        + compare(const Time&): int
+        + getHour(): int
+        + getMinute(): int
+        + setHour(int): void
+        + setMinute(int): void
+        + setFormatter(unique_ptr<TimeFormatter>): void
+        + operator<(const Time&): bool
+        + operator==(const Time&): bool
+    }
+
+    class OperationalTime {
+        + static constexpr int START_HOUR
+        + static constexpr int START_MINUTE
+        + static constexpr int MIDNIGHT_HOUR
+        + static constexpr int MIDNIGHT_MINUTE
+        + static constexpr int LAST_VALID_HOUR
+        + static constexpr int LAST_VALID_MINUTE
+        + OperationalTime(int, int, unique_ptr<TimeFormatter>)
+        + parse(const string&, unique_ptr<TimeFormatter>): unique_ptr<OperationalTime>
+        + isValid(): bool
+        + toString(): string
+        + compare(const Time&): int
+    }
+
+    class TimeFormatter {
+        <<interface>>
+        + virtual ~TimeFormatter()
+        + format(int, int): string
+    }
+
+    class AMPMTimeFormatter {
+        + format(int, int): string
+    }
+
+    class ISOTimeFormatter {
+        + format(int, int): string
+    }
+
+    class Destination {
+        - string value
+        + Destination(const string&)
+        + setValue(const string&): void
+        + isValid(): bool
+        + toString(): string
+        + operator string(): string
+    }
+
+    class PassengerID {
+        - string value
+        + PassengerID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const PassengerID&): bool
+        + operator==(const string&): bool
+    }
+
+    class VehicleID {
+        - string value
+        + VehicleID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const VehicleID&): bool
+        + operator==(const string&): bool
+    }
+
+    class Entity {
+        <<abstract>>
+    }
+
+    class Passenger {
+        <<entity>>
+    }
+
+    class ShuttleVehicle {
+        <<entity>>
+    }
+
+    Time <|-- OperationalTime
+    TimeFormatter <|-- AMPMTimeFormatter
+    TimeFormatter <|-- ISOTimeFormatter
+
+    Time --> TimeFormatter
+    Entity --> Destination
+    Entity --> Time
+    Passenger --> PassengerID
+    ShuttleVehicle --> VehicleID
+    Passenger --> Entity
+    ShuttleVehicle --> Entity

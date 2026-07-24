@@ -9,7 +9,6 @@
 #include <string>
 using namespace std;
 
-// Purpose: Strategy interface for formatting clock values.
 /**
  * @brief Strategy interface for converting Time objects into display strings.
  * @author Lee Jie Ying Jade

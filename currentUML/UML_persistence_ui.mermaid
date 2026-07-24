@@ -1,0 +1,156 @@
+classDiagram
+    direction TB
+
+    class LoadResult {
+        + bool passengerLoaded
+        + bool shuttleLoaded
+        + allLoaded(): bool
+        + anyLoaded(): bool
+    }
+
+    class FileLoader {
+        <<abstract>>
+        + virtual ~FileLoader()
+        + load(const string&, PassengerList&, ShuttleList&): bool
+    }
+    
+        class PassengerList {
+        - Registry registry
+        + add(const Passenger&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<Passenger>&
+        + findById(const string&): Passenger*
+        + findById(const string&): const Passenger*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class ShuttleList {
+        - Registry registry
+        + add(const ShuttleVehicle&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<ShuttleVehicle>&
+        + findById(const string&): ShuttleVehicle*
+        + findById(const string&): const ShuttleVehicle*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class PassengerParser {
+        + load(const string&, PassengerList&, ShuttleList&): bool
+        + parse(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class ShuttleParser {
+        + load(const string&, PassengerList&, ShuttleList&): bool
+        + parse(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class DataExporter {
+        + savePassengers(const string&, const PassengerList&): bool
+        + saveShuttles(const string&, const ShuttleList&): bool
+    }
+
+    class UserInputParser {
+        + parsePassengerInput(const string&, PassengerList&, ShuttleList&): bool
+        + parseShuttleInput(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class ScheduleOutputHandler {
+        <<abstract>>
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class ConsolePrinter {
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class TextFileFormatter {
+        - string outputPath
+        + TextFileFormatter(const string&)
+        + saveSchedules(const vector<Schedule>&, const string&): bool
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class SystemDataService {
+        - DataExporter exporter
+        + loadInitialData(PassengerList&, ShuttleList&, const string&): LoadResult
+        + editPassenger(PassengerList&, const string&, const string&, const string&, int): bool
+        + editShuttle(ShuttleList&, const string&, const string&, const string&, const string&): bool
+        + savePassengerData(const string&, const PassengerList&): bool
+        + saveShuttleData(const string&, const ShuttleList&): bool
+    }
+    
+    class SchedulingService {
+        - ScheduleMatcher matcher
+        - ScheduleRepository repository
+        + setStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + runMatchingAlgorithm(PassengerList&, ShuttleList&): void
+        + getSchedules(): const vector<Schedule>&
+        + clearSchedules(): void
+    }
+
+    class ScheduleManager {
+        - PassengerList passengerRegistry
+        - ShuttleList shuttleRegistry
+        - SystemDataService dataService
+        - SchedulingService schedulingService
+        + loadAllSystemData(const string&): LoadResult
+        + getPassengerRegistry(): PassengerList&
+        + getShuttleRegistry(): ShuttleList&
+        + getPassengerRegistry(): const PassengerList&
+        + getShuttleRegistry(): const ShuttleList&
+        + getAllEntities(): vector<const Entity*>
+        + setMatchingStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + runMatchingAlgorithm(): void
+        + getSchedules(): const vector<Schedule>&
+        + clearSchedules(): void
+        + savePassengerData(const string&): bool
+        + saveShuttleData(const string&): bool
+        + editPassenger(const string&, const string&, const string&, int): bool
+        + editShuttle(const string&, const string&, const string&, const string&): bool
+    }
+
+    class MenuController {
+        - ScheduleManager& manager
+        + MenuController(ScheduleManager&)
+        + run(): void
+        + loadDataFiles(const string&): void
+        + handleDataManagementMenu(): void
+        + displayAllData(): void
+        + getMenuChoice(int, int): int
+        + trim(const string&): string
+    }
+
+    FileLoader <|-- PassengerParser
+    FileLoader <|-- ShuttleParser
+
+    ScheduleOutputHandler <|-- ConsolePrinter
+    ScheduleOutputHandler <|-- TextFileFormatter
+
+    SystemDataService --> DataExporter
+    SystemDataService --> FileLoader
+    ScheduleManager --> PassengerList
+    ScheduleManager --> ShuttleList
+    ScheduleManager --> SystemDataService
+    ScheduleManager --> SchedulingService
+    MenuController --> ScheduleManager
+    MenuController --> UserInputParser
+    MenuController --> ScheduleOutputHandler
+    UserInputParser --> PassengerList
+    UserInputParser --> ShuttleList

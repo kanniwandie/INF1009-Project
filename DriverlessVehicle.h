@@ -16,9 +16,24 @@ using namespace std;
  */
 class DriverlessVehicle : public Entity {
 public:
+    /**
+     * @brief Constructs a driverless vehicle entity.
+     * @param id Vehicle identifier.
+     * @param destination Vehicle destination.
+     * @param scheduledTime Scheduled departure time.
+     */
     DriverlessVehicle(const string& id, const string& destination, const string& scheduledTime);
 
+    /**
+     * @brief Returns the runtime type label for the driverless vehicle.
+     * @return "DriverlessVehicle".
+     */
     string getType() const override;
+
+    /**
+     * @brief Returns a human-readable description of the driverless vehicle.
+     * @return Description string.
+     */
     string getDescription() const override;
 };
 

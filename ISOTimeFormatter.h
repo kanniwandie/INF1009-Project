@@ -8,7 +8,6 @@
 
 #include "TimeFormatter.h"
 
-// Purpose: Formats time values using 24-hour ISO-style notation.
 /**
  * @brief Formats a time value in 24-hour ISO style.
  * @author Lee Jie Ying Jade

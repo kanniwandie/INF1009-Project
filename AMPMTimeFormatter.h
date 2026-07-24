@@ -8,7 +8,6 @@
 
 #include "TimeFormatter.h"
 
-// Purpose: Formats time values using 12-hour AM/PM notation.
 /**
  * @brief Formats a time value using a 12-hour AM/PM convention.
  * @author Lee Jie Ying Jade

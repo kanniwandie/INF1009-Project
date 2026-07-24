@@ -1,0 +1,126 @@
+classDiagram
+    direction TB
+
+    class Registry~T~ {
+        - vector<T> items
+        + add(const T&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<T>&
+        + findById(const string&): T*
+        + findById(const string&): const T*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class PassengerList {
+        - Registry<Passenger> registry
+        + add(const Passenger&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<Passenger>&
+        + findById(const string&): Passenger*
+        + findById(const string&): const Passenger*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class ShuttleList {
+        - Registry<ShuttleVehicle> registry
+        + add(const ShuttleVehicle&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<ShuttleVehicle>&
+        + findById(const string&): ShuttleVehicle*
+        + findById(const string&): const ShuttleVehicle*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class Schedule {
+        - const Entity* passenger
+        - const Entity* shuttle
+        + Schedule(const Entity*, const Entity*)
+        + Schedule(const Schedule&)
+        + Schedule& operator=(const Schedule&)
+        + getPassenger(): const Entity*
+        + getShuttle(): const Entity*
+    }
+
+    class ScheduleRepository {
+        - vector<Schedule> activeSchedules
+        + addSchedule(const Schedule&): void
+        + getSchedules(): const vector<Schedule>&
+        + clear(): void
+    }
+
+    class IMatchingStrategy {
+        <<interface>>
+        + virtual ~IMatchingStrategy()
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class MinimumDispatchStrategy {
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class EarliestArrivalStrategy {
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class ScheduleMatcher {
+        - unique_ptr<IMatchingStrategy> strategy
+        + ScheduleMatcher(unique_ptr<IMatchingStrategy>)
+        + setStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+    }
+
+    class SchedulingService {
+        - ScheduleMatcher matcher
+        - ScheduleRepository repository
+        + setStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + runMatchingAlgorithm(PassengerList&, ShuttleList&): void
+        + getSchedules(): const vector<Schedule>&
+        + clearSchedules(): void
+    }
+
+    class Entity {
+        <<abstract>>
+    }
+
+    class Passenger {
+        <<entity>>
+    }
+
+    class ShuttleVehicle {
+        <<entity>>
+    }
+
+    PassengerList --> Registry
+    ShuttleList --> Registry
+    PassengerList --> Passenger
+    ShuttleList --> ShuttleVehicle
+
+    Schedule --> Entity
+    ScheduleRepository --> Schedule
+
+    IMatchingStrategy <|.. MinimumDispatchStrategy
+    IMatchingStrategy <|.. EarliestArrivalStrategy
+
+    ScheduleMatcher --> IMatchingStrategy
+    ScheduleMatcher --> PassengerList
+    ScheduleMatcher --> ShuttleList
+    ScheduleMatcher --> ScheduleRepository
+
+    SchedulingService --> ScheduleMatcher
+    SchedulingService --> ScheduleRepository
+    SchedulingService --> PassengerList
+    SchedulingService --> ShuttleList

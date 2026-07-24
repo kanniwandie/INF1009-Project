@@ -1,0 +1,138 @@
+classDiagram
+    direction TB
+
+    class Entity {
+        <<abstract>>
+        - string id
+        - Destination destination
+        - unique_ptr<Time> scheduledTime
+        - bool assigned
+        + Entity(const string&, const string&, const string&)
+        + virtual ~Entity()
+        + Entity(const Entity&)
+        + Entity& operator=(const Entity&)
+        + setDestination(const string&): void
+        + setScheduledTime(const string&): void
+        + getID(): string
+        + getDestination(): string
+        + getScheduledTime(): string
+        + getDestinationObject(): const Destination&
+        + getScheduledTimeObject(): const Time&
+        + setAssignedStatus(bool): void
+        + getAssignedStatus(): bool
+        + isValid(): bool
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class DriverlessVehicle {
+        <<abstract>>
+        + DriverlessVehicle(const string&, const string&, const string&)
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class Passenger {
+        - PassengerID passengerId
+        - int groupSize
+        + Passenger(const string&, const string&, const string&, int, bool)
+        + setGroupSize(int): void
+        + getGroupSize(): int
+        + isValid(): bool
+        + hasSameID(const PassengerID&): bool
+        + hasSameID(const string&): bool
+        + edit(const string&, const string&, int): void
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class ShuttleVehicle {
+        - VehicleID vehicleId
+        - unique_ptr<ShuttleModel> model
+        + ShuttleVehicle(const ShuttleVehicle&)
+        + ShuttleVehicle& operator=(const ShuttleVehicle&)
+        + ShuttleVehicle(const DriverlessVehicle&, bool)
+        + ShuttleVehicle(const string&, const string&, const string&, bool)
+        + ShuttleVehicle(ShuttleVehicle&&)
+        + ShuttleVehicle& operator=(ShuttleVehicle&&)
+        + setVehicleId(const string&): void
+        + getVehicleId(): string
+        + hasSameID(const VehicleID&): bool
+        + hasSameID(const string&): bool
+        + edit(const string&, const string&, unique_ptr<ShuttleModel>): void
+        + setModel(unique_ptr<ShuttleModel>): void
+        + getModel(): const ShuttleModel*
+        + isValid(): bool
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class Destination {
+        - string value
+        + Destination(const string&)
+        + setValue(const string&): void
+        + isValid(): bool
+        + toString(): string
+        + operator string(): string
+    }
+    
+    class PassengerID {
+        - string value
+        + PassengerID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const PassengerID&): bool
+        + operator==(const string&): bool
+    }
+
+    class VehicleID {
+        - string value
+        + VehicleID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const VehicleID&): bool
+        + operator==(const string&): bool
+    }
+
+    class ShuttleModel {
+        <<abstract>>
+        + virtual ~ShuttleModel()
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class SmallShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class FamilyShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class PremiumShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    Entity <|-- DriverlessVehicle
+    Entity <|-- Passenger
+    DriverlessVehicle <|-- ShuttleVehicle
+
+    ShuttleModel <|-- SmallShuttleModel
+    ShuttleModel <|-- FamilyShuttleModel
+    ShuttleModel <|-- PremiumShuttleModel
+
+    ShuttleVehicle --> ShuttleModel
+    Entity --> Destination
+    Passenger --> PassengerID
+    ShuttleVehicle --> VehicleID

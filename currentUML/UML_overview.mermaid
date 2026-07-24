@@ -1,0 +1,403 @@
+classDiagram
+    direction TB
+
+    class Entity {
+        <<abstract>>
+        - string id
+        - Destination destination
+        - unique_ptr<Time> scheduledTime
+        - bool assigned
+        + Entity(string, string, string)
+        + ~Entity()
+        + Entity(const Entity&)
+        + Entity& operator=(const Entity&)
+        + setDestination(const string&): void
+        + setScheduledTime(const string&): void
+        + getID(): string
+        + getDestination(): string
+        + getScheduledTime(): string
+        + getDestinationObject(): const Destination&
+        + getScheduledTimeObject(): const Time&
+        + setAssignedStatus(bool): void
+        + getAssignedStatus(): bool
+        + isValid(): bool
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class DriverlessVehicle {
+        <<abstract>>
+        + DriverlessVehicle(string, string, string)
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class Passenger {
+        - PassengerID passengerId
+        - int groupSize
+        + Passenger(const string&, const string&, const string&, int, bool)
+        + setGroupSize(int): void
+        + getGroupSize(): int
+        + isValid(): bool
+        + hasSameID(const PassengerID&): bool
+        + hasSameID(const string&): bool
+        + edit(const string&, const string&, int): void
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class ShuttleVehicle {
+        - VehicleID vehicleId
+        - unique_ptr<ShuttleModel> model
+        + ShuttleVehicle(const ShuttleVehicle&)
+        + ShuttleVehicle& operator=(const ShuttleVehicle&)
+        + ShuttleVehicle(const DriverlessVehicle&, bool)
+        + ShuttleVehicle(const string&, const string&, const string&, bool)
+        + setVehicleId(const string&): void
+        + getVehicleId(): string
+        + hasSameID(const VehicleID&): bool
+        + hasSameID(const string&): bool
+        + edit(const string&, const string&, unique_ptr<ShuttleModel>): void
+        + setModel(unique_ptr<ShuttleModel>): void
+        + getModel(): const ShuttleModel*
+        + isValid(): bool
+        + getType(): string
+        + getDescription(): string
+    }
+
+    class Schedule {
+        - const Entity* passenger
+        - const Entity* shuttle
+        + Schedule(const Entity*, const Entity*)
+        + Schedule(const Schedule&)
+        + Schedule& operator=(const Schedule&)
+        + getPassenger(): const Entity*
+        + getShuttle(): const Entity*
+    }
+
+    class Registry {
+        - vector<T> items
+        + add(const T&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<T>&
+        + findById(const string&): T*
+        + findById(const string&): const T*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class PassengerList {
+        - Registry registry
+        + add(const Passenger&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<Passenger>&
+        + findById(const string&): Passenger*
+        + findById(const string&): const Passenger*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class ShuttleList {
+        - Registry registry
+        + add(const ShuttleVehicle&): bool
+        + remove(const string&): bool
+        + containsId(const string&): bool
+        + getItems(): const vector<ShuttleVehicle>&
+        + findById(const string&): ShuttleVehicle*
+        + findById(const string&): const ShuttleVehicle*
+        + size(): size_t
+        + clear(): void
+        + resetAssignments(): void
+    }
+
+    class ScheduleRepository {
+        - vector<Schedule> activeSchedules
+        + addSchedule(const Schedule&): void
+        + getSchedules(): const vector<Schedule>&
+        + clear(): void
+    }
+
+    class ScheduleMatcher {
+        - unique_ptr<IMatchingStrategy> strategy
+        + ScheduleMatcher(unique_ptr<IMatchingStrategy>)
+        + setStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+    }
+
+    class SchedulingService {
+        - ScheduleMatcher matcher
+        - ScheduleRepository repository
+        + setStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + runMatchingAlgorithm(PassengerList&, ShuttleList&): void
+        + getSchedules(): const vector<Schedule>&
+        + clearSchedules(): void
+    }
+
+    class SystemDataService {
+        - DataExporter exporter
+        + loadInitialData(PassengerList&, ShuttleList&, string): LoadResult
+        + editPassenger(PassengerList&, string, string, string, int): bool
+        + editShuttle(ShuttleList&, string, string, string, string): bool
+        + savePassengerData(string, const PassengerList&): bool
+        + saveShuttleData(string, const ShuttleList&): bool
+    }
+
+    class ScheduleManager {
+        - PassengerList passengerRegistry
+        - ShuttleList shuttleRegistry
+        - SystemDataService dataService
+        - SchedulingService schedulingService
+        + loadAllSystemData(const string&): LoadResult
+        + getPassengerRegistry(): PassengerList&
+        + getShuttleRegistry(): ShuttleList&
+        + getPassengerRegistry(): const PassengerList&
+        + getShuttleRegistry(): const ShuttleList&
+        + getAllEntities(): vector<const Entity*>
+        + setMatchingStrategy(unique_ptr<IMatchingStrategy>): void
+        + getStrategyName(): string
+        + runMatchingAlgorithm(): void
+        + getSchedules(): const vector<Schedule>&
+        + clearSchedules(): void
+        + savePassengerData(const string&): bool
+        + saveShuttleData(const string&): bool
+        + editPassenger(const string&, const string&, const string&, int): bool
+        + editShuttle(const string&, const string&, const string&, const string&): bool
+    }
+
+    class MenuController {
+        - ScheduleManager& manager
+        + MenuController(ScheduleManager&)
+        + run(): void
+        + loadDataFiles(const string&): void
+        + handleDataManagementMenu(): void
+        + displayAllData(): void
+        + getMenuChoice(int, int): int
+        + trim(const string&): string
+    }
+
+    class ShuttleModel {
+        <<abstract>>
+        + virtual ~ShuttleModel()
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class SmallShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class FamilyShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class PremiumShuttleModel {
+        + getMaxSeats(): int
+        + getName(): string
+        + getCode(): string
+        + clone(): unique_ptr<ShuttleModel>
+    }
+
+    class Time {
+        <<abstract>>
+        # int hour
+        # int minute
+        - unique_ptr<TimeFormatter> formatter
+        + Time(int, int, unique_ptr<TimeFormatter>)
+        + isValid(): bool
+        + toString(): string
+        + compare(const Time&): int
+        + getHour(): int
+        + getMinute(): int
+        + setHour(int): void
+        + setMinute(int): void
+        + setFormatter(unique_ptr<TimeFormatter>): void
+        + operator<(const Time&): bool
+        + operator==(const Time&): bool
+    }
+
+    class OperationalTime {
+        + static constexpr int START_HOUR
+        + static constexpr int START_MINUTE
+        + static constexpr int MIDNIGHT_HOUR
+        + static constexpr int MIDNIGHT_MINUTE
+        + static constexpr int LAST_VALID_HOUR
+        + static constexpr int LAST_VALID_MINUTE
+        + OperationalTime(int, int, unique_ptr<TimeFormatter>)
+        + parse(const string&, unique_ptr<TimeFormatter>): unique_ptr<OperationalTime>
+        + isValid(): bool
+        + toString(): string
+        + compare(const Time&): int
+    }
+
+    class TimeFormatter {
+        <<interface>>
+        + virtual ~TimeFormatter()
+        + format(int, int): string
+    }
+
+    class AMPMTimeFormatter {
+        + format(int, int): string
+    }
+
+    class ISOTimeFormatter {
+        + format(int, int): string
+    }
+
+    class IMatchingStrategy {
+        <<interface>>
+        + virtual ~IMatchingStrategy()
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class MinimumDispatchStrategy {
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class EarliestArrivalStrategy {
+        + match(PassengerList&, ShuttleList&, ScheduleRepository&): void
+        + getName(): string
+    }
+
+    class ScheduleOutputHandler {
+        <<abstract>>
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class ConsolePrinter {
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class TextFileFormatter {
+        - string outputPath
+        + TextFileFormatter(const string&)
+        + saveSchedules(const vector<Schedule>&, const string&): bool
+        + writeSchedules(const vector<Schedule>&, const string&): void
+        + writeUnassigned(const PassengerList&, const ShuttleList&): void
+        + writeAllData(const PassengerList&, const ShuttleList&): void
+        + writeEntityOverview(const vector<const Entity*>&): void
+    }
+
+    class FileLoader {
+        <<abstract>>
+        + virtual ~FileLoader()
+        + load(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class PassengerParser {
+        + load(const string&, PassengerList&, ShuttleList&): bool
+        + parse(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class ShuttleParser {
+        + load(const string&, PassengerList&, ShuttleList&): bool
+        + parse(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class DataExporter {
+        + savePassengers(const string&, const PassengerList&): bool
+        + saveShuttles(const string&, const ShuttleList&): bool
+    }
+
+    class UserInputParser {
+        + parsePassengerInput(const string&, PassengerList&, ShuttleList&): bool
+        + parseShuttleInput(const string&, PassengerList&, ShuttleList&): bool
+    }
+
+    class Destination {
+        - string value
+        + Destination(const string&)
+        + setValue(const string&): void
+        + isValid(): bool
+        + toString(): string
+        + operator string(): string
+    }
+
+    class PassengerID {
+        - string value
+        + PassengerID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const PassengerID&): bool
+        + operator==(const string&): bool
+    }
+
+    class VehicleID {
+        - string value
+        + VehicleID(const string&)
+        + isValid(): bool
+        + getValue(): string
+        + operator==(const VehicleID&): bool
+        + operator==(const string&): bool
+    }
+
+    Entity <|-- DriverlessVehicle
+    Entity <|-- Passenger
+    DriverlessVehicle <|-- ShuttleVehicle
+
+    ShuttleModel <|-- SmallShuttleModel
+    ShuttleModel <|-- FamilyShuttleModel
+    ShuttleModel <|-- PremiumShuttleModel
+
+    Time <|-- OperationalTime
+    TimeFormatter <|-- AMPMTimeFormatter
+    TimeFormatter <|-- ISOTimeFormatter
+
+    IMatchingStrategy <|-- MinimumDispatchStrategy
+    IMatchingStrategy <|-- EarliestArrivalStrategy
+
+    ScheduleOutputHandler <|-- ConsolePrinter
+    ScheduleOutputHandler <|-- TextFileFormatter
+
+    FileLoader <|-- PassengerParser
+    FileLoader <|-- ShuttleParser
+
+    Entity --> Destination
+    Entity --> Time
+    Passenger --> PassengerID
+    ShuttleVehicle --> VehicleID
+    ShuttleVehicle --> ShuttleModel
+
+    PassengerList --> Registry
+    ShuttleList --> Registry
+    PassengerList --> Passenger
+    ShuttleList --> ShuttleVehicle
+
+    Schedule --> Entity
+    ScheduleRepository --> Schedule
+    ScheduleMatcher --> IMatchingStrategy
+    SchedulingService --> ScheduleMatcher
+    SchedulingService --> ScheduleRepository
+    ScheduleManager --> PassengerList
+    ScheduleManager --> ShuttleList
+    ScheduleManager --> SystemDataService
+    ScheduleManager --> SchedulingService
+
+    SystemDataService --> DataExporter
+    SystemDataService --> FileLoader
+    MenuController --> ScheduleManager
+    MenuController --> UserInputParser
+    MenuController --> ScheduleOutputHandler
+    UserInputParser --> PassengerList
+    UserInputParser --> ShuttleList
