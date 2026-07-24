@@ -1,0 +1,7 @@
+P01,Supermarket,8:05 AM,2
+P02,Residential_01,9:35 PM,1
+P03,School,7:15 AM,6
+P04,School,7:20 AM,2
+P05,Cinema,10:10 AM,4
+P06,School,11:59 PM,2
+P10,School,7:00 AM,2

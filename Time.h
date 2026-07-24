@@ -1,3 +1,8 @@
+/**
+ * @file Time.h
+ * @brief Declares the abstract time base class used by the scheduling domain.
+ * @author Lee Jie Ying Jade
+ */
 #ifndef TIME_H
 #define TIME_H
 
@@ -7,6 +12,10 @@
 using namespace std;
 
 // Purpose: Abstract base class for time domain objects.
+/**
+ * @brief Abstract base class for time values with formatting and comparison support.
+ * @author Lee Jie Ying Jade
+ */
 class Time {
 protected:
     int hour;

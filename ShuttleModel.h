@@ -1,3 +1,8 @@
+/**
+ * @file ShuttleModel.h
+ * @brief Defines the shuttle model hierarchy used for capacity and display behaviour.
+ * @author Chen Xiyuan
+ */
 #ifndef SHUTTLE_MODEL_H
 #define SHUTTLE_MODEL_H
 
@@ -5,6 +10,10 @@
 #include <string>
 using namespace std;
 
+/**
+ * @brief Abstract base class for shuttle capacity models.
+ * @author Chen Xiyuan
+ */
 class ShuttleModel {
 public:
     virtual ~ShuttleModel() = default;
@@ -17,6 +26,10 @@ public:
     virtual unique_ptr<ShuttleModel> clone() const = 0;
 };
 
+/**
+ * @brief Small-capacity shuttle model used for minimal dispatch scenarios.
+ * @author Chen Xiyuan
+ */
 class SmallShuttleModel : public ShuttleModel {
 public:
     int getMaxSeats() const override;
@@ -25,6 +38,10 @@ public:
     unique_ptr<ShuttleModel> clone() const override;
 };
 
+/**
+ * @brief Family-capacity shuttle model used for larger passenger groups.
+ * @author Chen Xiyuan
+ */
 class FamilyShuttleModel : public ShuttleModel {
 public:
     int getMaxSeats() const override;
@@ -33,6 +50,10 @@ public:
     unique_ptr<ShuttleModel> clone() const override;
 };
 
+/**
+ * @brief Premium-capacity shuttle model used for high-capacity dispatches.
+ * @author Chen Xiyuan
+ */
 class PremiumShuttleModel : public ShuttleModel {
 public:
     int getMaxSeats() const override;

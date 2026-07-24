@@ -1,13 +1,21 @@
+/**
+ * @file FileLoader.cpp
+ * @brief Implements file parsing and validation for passenger and shuttle input.
+ * @author Lee Yu Huan
+ */
 #include "FileLoader.h"
 #include "Registry.h"
 #include "Passenger.h"
 #include "ShuttleVehicle.h"
 #include "ShuttleModel.h"
+#include "OperationalTime.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <utility>
+#include <vector>
 
 namespace {
 string trim(const string& value) {
@@ -42,6 +50,106 @@ string normalizeModel(string model) {
 }
 
 namespace {
+struct ValidationIssue {
+    string reason;
+    string detail;
+};
+
+ValidationIssue inspectPassengerEntry(const string& rawEntry, const PassengerList& passengers) {
+    stringstream ss(rawEntry);
+    string id, destination, time, groupSizeField;
+    if (!getline(ss, id, ',') || !getline(ss, destination, ',') || !getline(ss, time, ',') || !getline(ss, groupSizeField, ',')) {
+        return {"malformed", "expected 4 comma-separated fields"};
+    }
+
+    string cleanedId = trim(id);
+    string cleanedDestination = trim(destination);
+    string cleanedTime = trim(time);
+    string cleanedGroupSize = trim(groupSizeField);
+
+    if (cleanedId.empty()) {
+        return {"invalid", "missing passenger ID"};
+    }
+
+    if (cleanedDestination.empty()) {
+        return {"invalid", "missing destination"};
+    }
+
+    if (cleanedTime.empty()) {
+        return {"invalid", "missing time"};
+    }
+
+    if (cleanedGroupSize.empty()) {
+        return {"invalid", "missing group size"};
+    }
+
+    int groupSize = -1;
+    try {
+        size_t processedCharacters = 0;
+        int parsedGroupSize = stoi(cleanedGroupSize, &processedCharacters);
+        if (processedCharacters == cleanedGroupSize.size()) {
+            groupSize = parsedGroupSize;
+        }
+    } catch (...) {
+        groupSize = -1;
+    }
+
+    if (groupSize < 1 || groupSize > 15) {
+        return {"invalid", "group size must be between 1 and 15"};
+    }
+
+    auto parsedTime = OperationalTime::parse(cleanedTime);
+    if (!parsedTime || !parsedTime->isValid()) {
+        return {"out-of-window", "time is outside the allowed operational window (06:00am to 00:00am)"};
+    }
+
+    if (passengers.containsId(cleanedId)) {
+        return {"duplicate", "passenger ID already exists"};
+    }
+
+    return {"", ""};
+}
+
+ValidationIssue inspectShuttleEntry(const string& rawEntry, const ShuttleList& shuttles) {
+    stringstream ss(rawEntry);
+    string id, destination, time, modelName;
+    if (!getline(ss, id, ',') || !getline(ss, destination, ',') || !getline(ss, time, ',') || !getline(ss, modelName, ',')) {
+        return {"malformed", "expected 4 comma-separated fields"};
+    }
+
+    string cleanedId = trim(id);
+    string cleanedDestination = trim(destination);
+    string cleanedTime = trim(time);
+    string cleanedModel = normalizeModel(trim(modelName));
+
+    if (cleanedId.empty()) {
+        return {"invalid", "missing shuttle ID"};
+    }
+
+    if (cleanedDestination.empty()) {
+        return {"invalid", "missing charging point"};
+    }
+
+    if (cleanedTime.empty()) {
+        return {"invalid", "missing time"};
+    }
+
+    if (cleanedModel.empty()) {
+        return {"invalid", "model must be Small, Family, or Premium"};
+    }
+
+    auto parsedTime = OperationalTime::parse(cleanedTime);
+    if (!parsedTime || !parsedTime->isValid()) {
+        return {"out-of-window", "time is outside the allowed operational window (06:00am to 00:00am)"};
+    }
+
+    if (shuttles.containsId(cleanedId)) {
+        return {"duplicate", "shuttle ID already exists"};
+    }
+
+    return {"", ""};
+}
+
 Passenger createPassengerFromFields(const string& id, const string& destination, const string& time, const string& groupSizeField) {
     int groupSize = -1;
     string cleanedGroupSize = trim(groupSizeField);
@@ -82,11 +190,26 @@ bool PassengerParser::load(const string& path, PassengerList& passengers, Shuttl
 
     string line;
     int lineNumber = 0;
+    vector<string> skippedOutsideOperationalWindow;
     while (getline(file, line)) {
         ++lineNumber;
         if (trim(line).empty()) continue;
         if (!parse(line, passengers, shuttles)) {
-            cerr << "[Warning] " << path << " line " << lineNumber << ": malformed or duplicate passenger entry skipped: \"" << line << "\"\n";
+            const auto issue = inspectPassengerEntry(line, passengers);
+            if (issue.reason == "out-of-window") {
+                skippedOutsideOperationalWindow.push_back(line);
+            }
+
+            cout << "[Warning] " << path << " line " << lineNumber << " -> "
+                 << issue.reason << ": " << issue.detail << " (entry skipped)\n";
+            cout << "  Entry: " << line << "\n";
+        }
+    }
+
+    if (!skippedOutsideOperationalWindow.empty()) {
+        cout << "[Operational Window] Passenger entries skipped because their time was outside the allowed window (06:00am to 00:00am):\n";
+        for (const string& skipped : skippedOutsideOperationalWindow) {
+            cout << "  - " << skipped << "\n";
         }
     }
     return true;
@@ -116,11 +239,26 @@ bool ShuttleParser::load(const string& path, PassengerList& passengers, ShuttleL
 
     string line;
     int lineNumber = 0;
+    vector<string> skippedOutsideOperationalWindow;
     while (getline(file, line)) {
         ++lineNumber;
         if (trim(line).empty()) continue;
         if (!parse(line, passengers, shuttles)) {
-            cerr << "[Warning] " << path << " line " << lineNumber << ": malformed or duplicate shuttle entry skipped: \"" << line << "\"\n";
+            const auto issue = inspectShuttleEntry(line, shuttles);
+            if (issue.reason == "out-of-window") {
+                skippedOutsideOperationalWindow.push_back(line);
+            }
+
+            cout << "[Warning] " << path << " line " << lineNumber << " -> "
+                 << issue.reason << ": " << issue.detail << " (entry skipped)\n";
+            cout << "  Entry: " << line << "\n";
+        }
+    }
+
+    if (!skippedOutsideOperationalWindow.empty()) {
+        cout << "[Operational Window] Shuttle entries skipped because their time was outside the allowed window (06:00am to 00:00am):\n";
+        for (const string& skipped : skippedOutsideOperationalWindow) {
+            cout << "  - " << skipped << "\n";
         }
     }
     return true;

@@ -1,3 +1,8 @@
+/**
+ * @file Schedule.h
+ * @brief Defines the schedule domain object and the schedule collection used by the matching engine.
+ * @author Lee Jie Ying Jade, Yap Hui Xin
+ */
 #ifndef SCHEDULE_H
 #define SCHEDULE_H
 
@@ -8,6 +13,10 @@ using namespace std;
 // Purpose: Small immutable value object representing one matched passenger-shuttle
 // pairing. Does not own the Passenger/ShuttleVehicle it points to; ownership stays
 // with the registries in ScheduleManager.
+/**
+ * @brief Represents one passenger-to-shuttle assignment produced by a matching strategy.
+ * @author Lee Jie Ying Jade, Yap Hui Xin
+ */
 class Schedule {
 private:
     const Passenger* assignPassenger;

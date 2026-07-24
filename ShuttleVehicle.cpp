@@ -1,3 +1,9 @@
+/**
+ * @file ShuttleVehicle.cpp
+ * @brief Implements the shuttle vehicle entity used for route scheduling.
+ * @author Chen Xiyuan
+ */
+
 #include "ShuttleVehicle.h"
 using namespace std;
 

@@ -1,3 +1,8 @@
+/**
+ * @file ScheduleMatcher.cpp
+ * @brief Implements the matcher that executes the selected strategy.
+ * @author Yap Hui Xin
+ */
 #include "ScheduleMatcher.h"
 #include <utility>
 using namespace std;

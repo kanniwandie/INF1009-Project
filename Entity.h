@@ -1,3 +1,8 @@
+/**
+ * @file Entity.h
+ * @brief Defines the abstract base entity used by passengers and shuttles.
+ * @author Chen Xiyuan
+ */
 #ifndef ENTITY_H
 #define ENTITY_H
 
@@ -8,6 +13,10 @@
 #include <string>
 using namespace std;
 
+/**
+ * @brief Abstract base class for all domain entities in the scheduling system.
+ * @author Chen Xiyuan
+ */
 class Entity {
 protected:
     string id;

@@ -1,0 +1,6 @@
+S01,School,11:59 PM,Small
+S02,Residential_01,9:35 PM,Premium
+S03,School,7:15 AM,Premium
+S04,Bank,10:45 AM,Family
+S05,School,7:10 AM,Small
+S10,School,7:00 AM,Family

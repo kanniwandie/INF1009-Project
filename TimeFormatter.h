@@ -1,3 +1,8 @@
+/**
+ * @file TimeFormatter.h
+ * @brief Defines the formatter abstraction used by the time system.
+ * @author Lee Jie Ying Jade
+ */
 #ifndef TIME_FORMATTER_H
 #define TIME_FORMATTER_H
 
@@ -5,6 +10,10 @@
 using namespace std;
 
 // Purpose: Strategy interface for formatting clock values.
+/**
+ * @brief Strategy interface for converting Time objects into display strings.
+ * @author Lee Jie Ying Jade
+ */
 class TimeFormatter {
 public:
     virtual ~TimeFormatter() = default;

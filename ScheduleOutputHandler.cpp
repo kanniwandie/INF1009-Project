@@ -1,3 +1,8 @@
+/**
+ * @file ScheduleOutputHandler.cpp
+ * @brief Implements console and file rendering for schedules and registry output.
+ * @author Melia Kek Xin Hui
+ */
 #include "ScheduleOutputHandler.h"
 #include <fstream>
 #include <iomanip>
@@ -15,10 +20,16 @@ string currentTimestamp() {
     time_t now = time(nullptr);
     tm localTime{};
 
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(_MSC_VER)
     if (localtime_s(&localTime, &now) != 0) {
         return "unknown";
     }
+#elif defined(_WIN32)
+    tm* converted = localtime(&now);
+    if (converted == nullptr) {
+        return "unknown";
+    }
+    localTime = *converted;
 #else
     if (localtime_r(&now, &localTime) == nullptr) {
         return "unknown";
@@ -173,10 +184,12 @@ void ConsolePrinter::writeEntityOverview(const vector<const Entity*>& entities) 
     cout << left << setw(9) << "Type" << "| " << left << setw(9) << "Valid?" << "| " << "Description\n";
     cout << string(80, '-') << "\n";
 
-    // entities mixes Passenger* and ShuttleVehicle* objects (upcast to Entity*).
-    // getType()/isValid()/getDescription() are pure virtual on Entity, so this one
-    // loop dispatches to the correct override for each element at runtime without
-    // ever checking (or needing to know) which concrete type it is looking at.
+    /*
+     * The entities vector mixes Passenger* and ShuttleVehicle* objects (upcast to Entity*).
+     * getType(), isValid(), and getDescription() are pure virtual on Entity, so this one
+     * loop dispatches to the correct override for each element at runtime without
+     * ever checking (or needing to know) which concrete type it is looking at.
+     */
     for (const Entity* entity : entities) {
         if (!entity) continue;
         cout << left << setw(9) << entity->getType() << "| "
@@ -253,9 +266,11 @@ void TextFileFormatter::writeEntityOverview(const vector<const Entity*>& entitie
     file << left << setw(9) << "Type" << "| " << left << setw(9) << "Valid?" << "| " << "Description\n";
     file << string(80, '-') << "\n";
 
-    // Same polymorphic dispatch as ConsolePrinter::writeEntityOverview, just
-    // written to a file instead of the console - the entity-handling code is
-    // identical either way because it only ever touches the Entity interface.
+    /*
+     * This uses the same polymorphic dispatch as ConsolePrinter::writeEntityOverview,
+     * but writes to a file instead of the console. The entity-handling logic is
+     * identical because it only ever touches the Entity interface.
+     */
     for (const Entity* entity : entities) {
         if (!entity) continue;
         file << left << setw(9) << entity->getType() << "| "

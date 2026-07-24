@@ -1,3 +1,8 @@
+/**
+ * @file SchedulingService.h
+ * @brief Combines matching and schedule storage into one application-facing service.
+ * @author Yap Hui Xin
+ */
 #ifndef SCHEDULING_SERVICE_H
 #define SCHEDULING_SERVICE_H
 
@@ -9,9 +14,10 @@ using namespace std;
 class PassengerList;
 class ShuttleList;
 
-// Purpose: Facade combining the matching engine (ScheduleMatcher) and schedule
-// storage (ScheduleRepository) so callers depend on one small surface instead of
-// two collaborating objects.
+/**
+ * @brief Facade that runs a matching strategy and stores the resulting schedules.
+ * @author Yap Hui Xin
+ */
 class SchedulingService {
 private:
     ScheduleMatcher matcher;

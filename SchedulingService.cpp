@@ -1,3 +1,8 @@
+/**
+ * @file SchedulingService.cpp
+ * @brief Implements the scheduling facade that runs the active strategy and stores results.
+ * @author Yap Hui Xin
+ */
 #include "SchedulingService.h"
 #include "Registry.h"
 #include <utility>

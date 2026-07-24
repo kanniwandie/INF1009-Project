@@ -1,3 +1,8 @@
+/**
+ * @file MenuController.h
+ * @brief Handles the console-based menu flow and delegates work to the service layer.
+ * @author Melia Kek Xin Hui
+ */
 #ifndef MENU_CONTROLLER_H
 #define MENU_CONTROLLER_H
 
@@ -12,6 +17,10 @@ using namespace std;
 // stay focused on presenting menus and reading input (SRP). It is instance-based
 // (not a static-only utility class) so it can be constructed with the manager it
 // coordinates, and mocked/replaced in tests if needed.
+/**
+ * @brief UI controller responsible for reading menu commands and dispatching them to the schedule manager.
+ * @author Melia Kek Xin Hui
+ */
 class MenuController {
 private:
     ScheduleManager& manager;

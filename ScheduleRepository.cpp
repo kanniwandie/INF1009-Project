@@ -1,3 +1,8 @@
+/**
+ * @file ScheduleRepository.cpp
+ * @brief Implements schedule storage for the active matching run.
+ * @author Yap Hui Xin
+ */
 #include "ScheduleRepository.h"
 using namespace std;
 

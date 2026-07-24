@@ -1,3 +1,9 @@
+/**
+ * @file SystemDataService.cpp
+ * @brief Implements service-level data operations for loading, editing, and exporting system data.
+ * @author Lee Yu Huan
+ */
+
 #include "SystemDataService.h"
 #include "FileLoader.h"
 #include "Passenger.h"
@@ -33,7 +39,13 @@ bool SystemDataService::editPassenger(PassengerList& passengers, const string& i
         return false;
     }
 
-    passenger->edit(newDestination, newTime, newGroupSize);
+    Passenger proposed(*passenger);
+    proposed.edit(newDestination, newTime, newGroupSize);
+    if (!proposed.isValid()) {
+        return false;
+    }
+
+    *passenger = proposed;
     passengers.resetAssignments();
     return true;
 }
@@ -53,7 +65,13 @@ bool SystemDataService::editShuttle(ShuttleList& shuttles, const string& id, con
         model = make_unique<SmallShuttleModel>();
     }
 
-    shuttle->edit(newDestination, newTime, std::move(model));
+    ShuttleVehicle proposed(*shuttle);
+    proposed.edit(newDestination, newTime, std::move(model));
+    if (!proposed.isValid()) {
+        return false;
+    }
+
+    *shuttle = proposed;
     shuttles.resetAssignments();
     return true;
 }

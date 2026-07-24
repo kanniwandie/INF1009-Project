@@ -1,3 +1,8 @@
+/**
+ * @file SystemDataService.h
+ * @brief Offers service-level data operations for loading, editing, and exporting system data.
+ * @author Lee Yu Huan
+ */
 #ifndef SYSTEM_DATA_SERVICE_H
 #define SYSTEM_DATA_SERVICE_H
 
@@ -10,6 +15,10 @@ using namespace std;
 // previously meant a partial load (e.g. only passenger.txt present) either silently
 // looked like full success (old "||" behavior) or falsely looked like total failure
 // (old "&&" behavior) even when one file's data loaded and is genuinely usable.
+/**
+ * @brief Reports the outcome of loading passenger and shuttle data files.
+ * @author Lee Yu Huan
+ */
 struct LoadResult {
     bool passengerLoaded = false;
     bool shuttleLoaded = false;
@@ -17,6 +26,10 @@ struct LoadResult {
     bool anyLoaded() const { return passengerLoaded || shuttleLoaded; }
 };
 
+/**
+ * @brief Service class that coordinates data loading, editing, and export workflows.
+ * @author Lee Yu Huan
+ */
 class SystemDataService {
 private:
     DataExporter exporter;

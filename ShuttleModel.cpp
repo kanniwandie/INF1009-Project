@@ -1,3 +1,9 @@
+/**
+ * @file ShuttleModel.cpp
+ * @brief Implements the shuttle model hierarchy used for capacity and display behaviour.
+ * @author Chen Xiyuan
+ */
+
 #include "ShuttleModel.h"
 
 int SmallShuttleModel::getMaxSeats() const { return 2; }

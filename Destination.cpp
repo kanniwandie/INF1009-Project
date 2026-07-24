@@ -1,3 +1,9 @@
+/**
+ * @file Destination.cpp
+ * @brief Implements the destination value object used by entities.
+ * @author Chen Xiyuan
+ */
+
 #include "Destination.h"
 #include <cctype>
 

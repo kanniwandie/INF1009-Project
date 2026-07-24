@@ -1,6 +1,11 @@
+/**
+ * @file Time.cpp
+ * @brief Implements the common base behaviour for all time-domain classes.
+ * @author Lee Jie Ying Jade
+ */
+
 #include "Time.h"
 
-// Purpose: Implements the common base behavior for all time-domain classes.
 Time::Time(int hour, int minute, unique_ptr<TimeFormatter> formatter)
     : hour(hour), minute(minute), formatter(std::move(formatter)) {}
 

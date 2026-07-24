@@ -1,9 +1,18 @@
+/**
+ * @file VehicleID.h
+ * @brief Declares the shuttle vehicle ID value object.
+ * @author Chen Xiyuan
+ */
 #ifndef VEHICLE_ID_H
 #define VEHICLE_ID_H
 
 #include <string>
 using namespace std;
 
+/**
+ * @brief Strongly typed identifier for shuttle vehicles.
+ * @author Chen Xiyuan
+ */
 class VehicleID {
 private:
     string value;

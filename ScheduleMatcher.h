@@ -1,3 +1,8 @@
+/**
+ * @file ScheduleMatcher.h
+ * @brief Executes the selected matching strategy against the passenger and shuttle registries.
+ * @author Yap Hui Xin
+ */
 #ifndef SCHEDULE_MATCHER_H
 #define SCHEDULE_MATCHER_H
 
@@ -10,10 +15,10 @@ class PassengerList;
 class ShuttleList;
 class ScheduleRepository;
 
-// Purpose: Runs a pluggable IMatchingStrategy (Strategy Pattern) against the
-// passenger/shuttle registries and records results into a ScheduleRepository.
-// Extracted from the former ScheduleList god-class so "how matching is executed"
-// is separate from "what data is being matched" and "where results are stored".
+/**
+ * @brief Executes a pluggable matching strategy and writes the results into a repository.
+ * @author Yap Hui Xin
+ */
 class ScheduleMatcher {
 private:
     unique_ptr<IMatchingStrategy> strategy;

@@ -1,3 +1,8 @@
+/**
+ * @file ScheduleManager.h
+ * @brief Provides the top-level facade for coordinating schedules, registries, and persistence services.
+ * @author Melia Kek Xin Hui
+ */
 #ifndef SCHEDULE_MANAGER_H
 #define SCHEDULE_MANAGER_H
 
@@ -11,11 +16,10 @@ using namespace std;
 
 class Entity;
 
-// Purpose: Top-level application service. Replaces the former ScheduleList
-// god-class: instead of one class owning the registries, persistence, AND the
-// matching algorithm, each concern now lives in its own class (SystemDataService,
-// ScheduleMatcher, ScheduleRepository via SchedulingService) and ScheduleManager
-// simply wires them together (Facade Pattern) for the UI layer to use.
+/**
+ * @brief High-level coordinator that wires registries, persistence, and matching workflows together.
+ * @author Melia Kek Xin Hui
+ */
 class ScheduleManager {
 private:
     PassengerList passengerRegistry{};

@@ -1,3 +1,9 @@
+/**
+ * @file VehicleID.cpp
+ * @brief Implements the shuttle vehicle ID value object.
+ * @author Chen Xiyuan
+ */
+
 #include "VehicleID.h"
 #include <algorithm>
 #include <cctype>

@@ -1,3 +1,9 @@
+/**
+ * @file DriverlessVehicle.cpp
+ * @brief Implements the autonomous vehicle base class used by shuttle entities.
+ * @author Chen Xiyuan
+ */
+
 #include "DriverlessVehicle.h"
 using namespace std;
 

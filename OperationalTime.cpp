@@ -1,120 +1,137 @@
+/**
+ * @file OperationalTime.cpp
+ * @brief Implements the operational time object used for route and shuttle scheduling.
+ * @author Lee Jie Ying Jade
+ */
+
 #include "OperationalTime.h"
 #include "AMPMTimeFormatter.h"
 #include <algorithm>
 #include <cctype>
-#include <regex>
+#include <stdexcept>
+#include <sstream>
 
 namespace {
+constexpr int OPERATIONAL_START_HOUR = 6;
+constexpr int OPERATIONAL_START_MINUTE = 0;
+constexpr int OPERATIONAL_END_HOUR = 23;
+constexpr int OPERATIONAL_END_MINUTE = 59;
+constexpr int MIDNIGHT_HOUR = 0;
+constexpr int MIDNIGHT_MINUTE = 0;
+
 string trim(const string& value) {
-    size_t start = value.find_first_not_of(" \t\r\n");
-    if (start == string::npos) return "";
-    size_t end = value.find_last_not_of(" \t\r\n");
-    return value.substr(start, end - start + 1);
-}
-
-bool parseTimeValue(const string& raw, int& hour, int& minute) {
-    const string value = trim(raw);
-
-    static const regex timePattern(
-        R"(^(\d{1,2}):(\d{2})\s*([aApP][mM])$)"
-    );
-
-    smatch match;
-
-    if (!regex_match(value, match, timePattern)) {
-        return false;
+    size_t first = value.find_first_not_of(" \t\r\n");
+    if (first == string::npos) {
+        return "";
     }
 
-    try {
-        int hour12 = stoi(match[1].str());
-        minute = stoi(match[2].str());
-
-        char period = static_cast<char>(
-            tolower(
-                static_cast<unsigned char>(
-                    match[3].str()[0]
-                )
-            )
-        );
-
-        if (minute < 0 || minute > 59) {
-            return false;
-        }
-
-        if (hour12 == 0) {
-            // 00:xxpm is not valid.
-            if (period != 'a') {
-                return false;
-            }
-
-            hour = 0;
-            return true;
-        }
-
-        if (hour12 < 1 || hour12 > 12) {
-            return false;
-        }
-
-        // Convert 12-hour time to 24-hour time.
-        hour = hour12 % 12;
-
-        if (period == 'p') {
-            hour += 12;
-        }
-
-        return true;
-    }
-    catch (...) {
-        return false;
-    }
+    size_t last = value.find_last_not_of(" \t\r\n");
+    return value.substr(first, last - first + 1);
+}
 }
 
-}
-// Purpose: Implements the validated operational time domain object.
 OperationalTime::OperationalTime(int hour, int minute, unique_ptr<TimeFormatter> formatter)
-    : Time(hour, minute, std::move(formatter)) {}
+    : Time(hour, minute, std::move(formatter)) {
+    if (this->formatter == nullptr) {
+        this->formatter = make_unique<AMPMTimeFormatter>();
+    }
+}
 
 unique_ptr<OperationalTime> OperationalTime::parse(const string& rawTime, unique_ptr<TimeFormatter> formatter) {
-    int hour = 6;
+    auto result = make_unique<OperationalTime>(-1, 0, std::move(formatter));
+    string text = trim(rawTime);
+    if (text.empty()) {
+        return result;
+    }
+
+    string lower = text;
+    transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) {
+        return static_cast<char>(tolower(ch));
+    });
+
+    bool isPM = false;
+    if (lower.size() >= 2 && (lower.substr(lower.size() - 2) == "pm" || lower.substr(lower.size() - 2) == "am")) {
+        isPM = lower.substr(lower.size() - 2) == "pm";
+        lower = lower.substr(0, lower.size() - 2);
+    }
+
+    lower = trim(lower);
+    if (lower.empty()) {
+        return result;
+    }
+
+    size_t separator = lower.find(':');
+    if (separator == string::npos) {
+        separator = lower.find('.');
+    }
+
+    int hour = 0;
     int minute = 0;
-    if (!formatter) {
-        formatter = make_unique<AMPMTimeFormatter>();
+
+    try {
+        if (separator == string::npos) {
+            hour = stoi(lower);
+        } else {
+            string hourPart = trim(lower.substr(0, separator));
+            string minutePart = trim(lower.substr(separator + 1));
+            if (hourPart.empty() || minutePart.empty()) {
+                return result;
+            }
+            hour = stoi(hourPart);
+            minute = stoi(minutePart);
+        }
+    } catch (const invalid_argument&) {
+        return result;
+    } catch (const out_of_range&) {
+        return result;
     }
 
-    if (parseTimeValue(rawTime, hour, minute)) {
-        return make_unique<OperationalTime>(hour, minute, std::move(formatter));
+    if (hour < 0 || hour > 12 || minute < 0 || minute > 59) {
+        return result;
     }
 
-    // Deliberately NOT falling back to a plausible-looking default like 6:00 AM
-    // here: that would make garbage input (e.g. a malformed data file row)
-    // silently masquerade as a legitimate, valid entity. hour = -1 guarantees
-    // isValid() below correctly reports this object as invalid, so callers
-    // (and the CRUD validation added to MenuController) can detect and reject
-    // unparseable time strings instead of quietly accepting them.
-    return make_unique<OperationalTime>(-1, -1, std::move(formatter));
+    if (hour == 12) {
+        hour = isPM ? 12 : 0;
+    } else if (isPM) {
+        hour += 12;
+    }
+
+    if (hour == 24) {
+        hour = 0;
+    }
+
+    result->setHour(hour);
+    result->setMinute(minute);
+    return result;
 }
 
 bool OperationalTime::isValid() const {
-    if (minute < 0 || minute > 59) {
-        return false;
-    }
-
-    if (hour == 0 && minute == 0) {
-        return true;
-    }
-
-    return hour >= 6 && hour <= 23;
+    const bool isMidnight = (hour == MIDNIGHT_HOUR && minute == MIDNIGHT_MINUTE);
+    const bool isWithinServiceWindow = hour >= OPERATIONAL_START_HOUR && hour <= OPERATIONAL_END_HOUR
+        && minute >= OPERATIONAL_START_MINUTE && minute <= OPERATIONAL_END_MINUTE;
+    return isMidnight || isWithinServiceWindow;
 }
 
 string OperationalTime::toString() const {
-    if (formatter) {
-        return formatter->format(hour, minute);
+    if (!isValid()) {
+        return "Invalid Time";
     }
-    return AMPMTimeFormatter().format(hour, minute);
+
+    if (formatter == nullptr) {
+        return "Invalid Time";
+    }
+
+    return formatter->format(hour, minute);
 }
 
 int OperationalTime::compare(const Time& other) const {
-    int lhs = hour * 60 + minute;
-    int rhs = other.getHour() * 60 + other.getMinute();
-    return lhs < rhs ? -1 : (lhs > rhs ? 1 : 0);
+    const int thisTotal = hour * 60 + minute;
+    const int otherTotal = other.getHour() * 60 + other.getMinute();
+    if (thisTotal < otherTotal) {
+        return -1;
+    }
+    if (thisTotal > otherTotal) {
+        return 1;
+    }
+    return 0;
 }

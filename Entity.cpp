@@ -1,3 +1,9 @@
+/**
+ * @file Entity.cpp
+ * @brief Implements the abstract base entity used by passengers and shuttles.
+ * @author Chen Xiyuan
+ */
+
 #include "Entity.h"
 using namespace std;
 

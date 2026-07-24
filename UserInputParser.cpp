@@ -1,3 +1,9 @@
+/**
+ * @file UserInputParser.cpp
+ * @brief Implements user input parsing for passenger and shuttle data entry.
+ * @author Melia Kek Xin Hui
+ */
+
 #include "UserInputParser.h"
 #include "FileLoader.h"
 #include "Passenger.h"

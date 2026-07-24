@@ -1,3 +1,8 @@
+/**
+ * @file ShuttleVehicle.h
+ * @brief Declares the shuttle vehicle entity used for route scheduling.
+ * @author Chen Xiyuan
+ */
 #ifndef SHUTTLE_VEHICLE_H
 #define SHUTTLE_VEHICLE_H
 
@@ -8,6 +13,10 @@
 #include <string>
 using namespace std;
 
+/**
+ * @brief Represents a shuttle vehicle with a model, ID, and assignment state.
+ * @author Chen Xiyuan
+ */
 class ShuttleVehicle : public DriverlessVehicle {
 private:
     VehicleID vehicleId;

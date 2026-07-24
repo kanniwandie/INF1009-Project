@@ -1,0 +1,7 @@
+S01, School, 11:59pm, Small
+S02, Residential_01, 9:35pm, Premium
+S03, School, 7:15am, Premium
+S04, Bank, 10:45am, Family
+S05, School, 7:10am, Small
+S03, Another_Destination, 8:00am, Small
+S06, Airport, 4:30am, Premium

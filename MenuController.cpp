@@ -1,14 +1,124 @@
+/**
+ * @file MenuController.cpp
+ * @brief Implements the console menu workflow and delegates business logic to the service layer.
+ * @author Melia Kek Xin Hui
+ */
 #include "MenuController.h"
+#include "OperationalTime.h"
 #include "ScheduleOutputHandler.h"
 #include "UserInputParser.h"
 #include <iostream>
 #include <limits>
 #include <cstdlib>
-#include <filesystem>
+#include <fstream>
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 
 using namespace std;
+
+namespace {
+string readLineInput(const string& prompt) {
+    cout << prompt;
+    string line;
+    getline(cin, line);
+    return line;
+}
+
+vector<string> splitTokens(const string& line) {
+    vector<string> tokens;
+    stringstream ss(line);
+    string token;
+    while (ss >> token) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+string normalizeModelName(const string& model) {
+    string normalized = model;
+    size_t start = normalized.find_first_not_of(" \t\r\n");
+    if (start == string::npos) {
+        return "";
+    }
+    size_t end = normalized.find_last_not_of(" \t\r\n");
+    normalized = normalized.substr(start, end - start + 1);
+
+    transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char ch) {
+        return static_cast<char>(tolower(ch));
+    });
+
+    if (normalized == "small") {
+        return "Small";
+    }
+    if (normalized == "family") {
+        return "Family";
+    }
+    if (normalized == "premium") {
+        return "Premium";
+    }
+    return "";
+}
+
+string joinTokens(const vector<string>& tokens, size_t start, size_t end) {
+    string result;
+    for (size_t i = start; i < end; ++i) {
+        if (i > start) {
+            result += ' ';
+        }
+        result += tokens[i];
+    }
+    return result;
+}
+
+bool parsePassengerInputLine(const string& inputLine, string& id, string& destination, string& time, int& groupSize, string& errorMessage) {
+    vector<string> tokens = splitTokens(inputLine);
+    if (tokens.size() < 4) {
+        errorMessage = "Error: Please enter at least 4 values: ID, Destination, Time, Group Size.";
+        return false;
+    }
+
+    id = tokens[0];
+    destination = joinTokens(tokens, 1, tokens.size() - 2);
+    time = tokens[tokens.size() - 2];
+
+    try {
+        groupSize = stoi(tokens.back());
+    } catch (...) {
+        errorMessage = "Error: Group Size must be a whole number. Entry rejected.";
+        return false;
+    }
+
+    auto parsedTime = OperationalTime::parse(time);
+    if (!parsedTime || !parsedTime->isValid()) {
+        errorMessage = "Error: Passenger entry rejected because the requested time falls outside the operational window (06:00am to 00:00am). It was not added to RAM.";
+        return false;
+    }
+
+    return true;
+}
+
+bool parseShuttleInputLine(const string& inputLine, string& id, string& destination, string& time, string& model, string& errorMessage) {
+    vector<string> tokens = splitTokens(inputLine);
+    if (tokens.size() < 4) {
+        errorMessage = "Error: Please enter at least 4 values: ID, Destination, Time, Model.";
+        return false;
+    }
+
+    id = tokens[0];
+    destination = joinTokens(tokens, 1, tokens.size() - 2);
+    time = tokens[tokens.size() - 2];
+    model = normalizeModelName(tokens.back());
+
+    auto parsedTime = OperationalTime::parse(time);
+    if (!parsedTime || !parsedTime->isValid()) {
+        errorMessage = "Error: Shuttle entry rejected because the requested time falls outside the operational window (06:00am to 00:00am). It was not added to RAM.";
+        return false;
+    }
+
+    return true;
+}
+}
 
 MenuController::MenuController(ScheduleManager& manager) : manager(manager) {
 }
@@ -44,18 +154,24 @@ string MenuController::normalizeModel(string model) {
 }
 
 int MenuController::getMenuChoice(int min, int max) {
-    int choice;
-    while (!(cin >> choice) || choice < min || choice > max) {
+    while (true) {
+        string line;
+        getline(cin, line);
         if (cin.eof()) {
             cout << "\nInput stream ended unexpectedly. Closing application.\n";
             exit(0);
         }
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        try {
+            int choice = stoi(line);
+            if (choice >= min && choice <= max) {
+                return choice;
+            }
+        } catch (...) {
+        }
+
         cout << "Invalid input. Enter a number between " << min << " and " << max << ": ";
     }
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    return choice;
 }
 
 void MenuController::loadDataFiles(const string& folder) {
@@ -98,10 +214,8 @@ void MenuController::handleSaveArchive() const {
         return;
     }
 
-    string filename;
-    cout << "Enter filename to archive the '" << manager.getStrategyName()
-         << "' route plan (e.g., minimum_dispatch_run.txt): ";
-    cin >> filename;
+    string filename = readLineInput("Enter filename to archive the '" + manager.getStrategyName()
+                                     + "' route plan (e.g., minimum_dispatch_run.txt): ");
 
     TextFileFormatter formatter(filename);
 
@@ -124,13 +238,12 @@ void MenuController::handleUnassignedDisplay() const {
 }
 
 void MenuController::handleSaveSystemData() const {
-    // Application Requirement 10: save passenger/shuttle data to NEW files -
-    // never overwrite the originals, and only ever on explicit user request.
-    string passengerPath, shuttlePath;
-    cout << "Enter a NEW filename for passenger data (e.g. passenger_updated.txt): ";
-    cin >> passengerPath;
-    cout << "Enter a NEW filename for shuttle data (e.g. shuttle_updated.txt): ";
-    cin >> shuttlePath;
+    /*
+     * Application Requirement 10: save passenger/shuttle data to NEW files -
+     * never overwrite the originals, and only ever on explicit user request.
+     */
+    string passengerPath = readLineInput("Enter a NEW filename for passenger data (e.g. passenger_updated.txt): ");
+    string shuttlePath = readLineInput("Enter a NEW filename for shuttle data (e.g. shuttle_updated.txt): ");
 
     if (passengerPath == shuttlePath) {
         cout << "Error: Passenger and shuttle files must use "
@@ -138,8 +251,12 @@ void MenuController::handleSaveSystemData() const {
         return;
     }
 
-    if (std::filesystem::exists(passengerPath) ||
-        std::filesystem::exists(shuttlePath)) {
+    auto fileExists = [](const string& path) {
+        ifstream input(path.c_str());
+        return input.good();
+    };
+
+    if (fileExists(passengerPath) || fileExists(shuttlePath)) {
         cout << "Error: One or both filenames already exist. "
             << "Enter new filenames.\n";
         return;
@@ -186,17 +303,15 @@ void MenuController::handleDataManagementMenu() {
         string id, dest, time;
         switch (choice) {
         case 1: {
+            string inputLine = readLineInput("Enter ID, Destination, Time and Group Size (1-15) (Eg. P01 School 7:20am 5 -> separated by space): ");
             int groupSize = 1;
-            cout << "Enter ID, Destination, Time and Group Size (1-15) (Eg. P01 School 7:20am 5 -> separated by space):";
-            cin >> id >> dest >> time >> groupSize;
-            if (cin.fail()) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Error: Group Size must be a whole number. Entry rejected.\n";
+            string errorMessage;
+            if (!parsePassengerInputLine(inputLine, id, dest, time, groupSize, errorMessage)) {
+                cout << errorMessage << "\n";
                 break;
             }
             if (pReg.containsId(id)) {
-                cout << "Error: Passenger ID '" << id << "' already exists.\n";
+                cout << "Error: Passenger entry rejected because the passenger ID '" << id << "' already exists. It was not added to RAM.\n";
                 break;
             }
             if (groupSize < 1 || groupSize > 15) {
@@ -225,12 +340,14 @@ void MenuController::handleDataManagementMenu() {
         }
         case 2: {
             string model = "Small";
-            cout << "Enter ID, Charging Point, Time, and Model (Small/Family/Premium) (Eg. S01 School 7:15am Small -> separated by spaces): ";
-            cin >> id >> dest >> time >> model;
-            // Convert small, SMALL, family, etc. into the standard format.
-            model = normalizeModel(model);
+            string inputLine = readLineInput("Enter ID, Charging Point, Time, and Model (Small/Family/Premium) (Eg. S01 School 7:15am Small -> separated by spaces): ");
+            string errorMessage;
+            if (!parseShuttleInputLine(inputLine, id, dest, time, model, errorMessage)) {
+                cout << errorMessage << "\n";
+                break;
+            }
             if (sReg.containsId(id)) {
-                cout << "Error: Shuttle ID '" << id << "' already exists.\n";
+                cout << "Error: Shuttle entry rejected because the shuttle ID '" << id << "' already exists. It was not added to RAM.\n";
                 break;
             }
             if (model.empty()) {
@@ -260,28 +377,40 @@ void MenuController::handleDataManagementMenu() {
         case 3: {
             string editId, newDest, newTime;
             int newGroupSize = 1;
-            cout << "Enter Passenger ID to edit: ";
-            cin >> editId;
+            editId = readLineInput("Enter Passenger ID to edit: ");
             Passenger* passenger = pReg.findById(editId);
             if (!passenger) {
                 cout << "Error: Passenger ID '" << editId << "' does not exist.\n";
             } else {
                 cout << "Found " << passenger->getDescription() << "\n";
-                cout << "Enter New Destination, New Time, and New Group Size (1-15) (Home 8:00pm 4 -> separated by space): ";
-                cin >> newDest >> newTime >> newGroupSize;
+                string inputLine = readLineInput("Enter New Destination, New Time, and New Group Size (1-15) (Home 8:00pm 4 -> separated by space): ");
+                vector<string> tokens = splitTokens(inputLine);
+                if (tokens.size() < 3) {
+                    cout << "Error: Please enter at least 3 values: Destination, Time, Group Size.\n";
+                    break;
+                }
 
-                if (cin.fail()) {
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                newDest = joinTokens(tokens, 0, tokens.size() - 2);
+                newTime = tokens[tokens.size() - 2];
+                try {
+                    newGroupSize = stoi(tokens.back());
+                } catch (...) {
                     cout << "Error: Group Size must be a whole number. Edit cancelled.\n";
                     break;
                 }
+
                 if (newGroupSize < 1 || newGroupSize > 15) {
                     cout << "Error: Group Size must be between 1 and 15 (got " << newGroupSize << "). Edit cancelled.\n";
                     break;
                 }
                 if (trim(newDest).empty()) {
                     cout << "Error: Destination cannot be empty. Edit cancelled.\n";
+                    break;
+                }
+
+                auto parsedPassengerEditTime = OperationalTime::parse(newTime);
+                if (!parsedPassengerEditTime || !parsedPassengerEditTime->isValid()) {
+                    cout << "Error: Passenger update cancelled because the requested time falls outside the operational window (06:00am to 00:00am). The existing entry was kept unchanged.\n";
                     break;
                 }
 
@@ -302,18 +431,22 @@ void MenuController::handleDataManagementMenu() {
         }
         case 4: {
             string editId, newPoint, newTime, newModel;
-            cout << "Enter Shuttle ID to edit: ";
-            cin >> editId;
+            editId = readLineInput("Enter Shuttle ID to edit: ");
             ShuttleVehicle* shuttle = sReg.findById(editId);
             if (!shuttle) {
                 cout << "Error: Shuttle ID '" << editId << "' does not exist.\n";
             } else {
                 cout << "Found " << shuttle->getDescription() << "\n";
-                cout << "Enter New Charging Point, New Time, and New Model (Small/Family/Premium) (Home 7:00pm Family -> separated by space): ";
-                cin >> newPoint >> newTime >> newModel;
+                string inputLine = readLineInput("Enter New Charging Point, New Time, and New Model (Small/Family/Premium) (Home 7:00pm Family -> separated by space): ");
+                vector<string> tokens = splitTokens(inputLine);
+                if (tokens.size() < 3) {
+                    cout << "Error: Please enter at least 3 values: Destination, Time, Model.\n";
+                    break;
+                }
 
-                // Convert the input into the standard model name.
-                newModel = normalizeModel(newModel);
+                newPoint = joinTokens(tokens, 0, tokens.size() - 2);
+                newTime = tokens[tokens.size() - 2];
+                newModel = normalizeModel(tokens.back());
 
                 if (newModel.empty()) {
                     cout << "Error: Model must be Small, Family, or Premium. " << "Edit cancelled.\n";
@@ -321,6 +454,12 @@ void MenuController::handleDataManagementMenu() {
                 }
                 if (trim(newPoint).empty()) {
                     cout << "Error: Charging Point cannot be empty. Edit cancelled.\n";
+                    break;
+                }
+
+                auto parsedShuttleEditTime = OperationalTime::parse(newTime);
+                if (!parsedShuttleEditTime || !parsedShuttleEditTime->isValid()) {
+                    cout << "Error: Shuttle update cancelled because the requested time falls outside the operational window (06:00am to 00:00am). The existing entry was kept unchanged.\n";
                     break;
                 }
 
@@ -340,8 +479,7 @@ void MenuController::handleDataManagementMenu() {
             break;
         }
         case 5:
-            cout << "Enter Passenger ID to remove: ";
-            cin >> id;
+            id = readLineInput("Enter Passenger ID to remove: ");
             if (pReg.remove(id)) {
                 pReg.resetAssignments();
                 cout << "Removed from RAM.\n";
@@ -350,8 +488,7 @@ void MenuController::handleDataManagementMenu() {
             }
             break;
         case 6:
-            cout << "Enter Shuttle ID to remove: ";
-            cin >> id;
+            id = readLineInput("Enter Shuttle ID to remove: ");
             if (sReg.remove(id)) {
                 sReg.resetAssignments();
                 cout << "Removed from RAM.\n";

@@ -1,3 +1,8 @@
+/**
+ * @file Passenger.h
+ * @brief Defines the passenger entity and its behaviour within the scheduling system.
+ * @author Chen Xiyuan
+ */
 #ifndef PASSENGER_H
 #define PASSENGER_H
 
@@ -6,6 +11,10 @@
 #include <string>
 using namespace std;
 
+/**
+ * @brief Represents a passenger request with destination, time, and group-size information.
+ * @author Chen Xiyuan
+ */
 class Passenger : public Entity {
 private:
     PassengerID passengerId;

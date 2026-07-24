@@ -1,8 +1,12 @@
+/**
+ * @file AMPMTimeFormatter.cpp
+ * @brief Implements the 12-hour AM/PM formatter strategy.
+ * @author Lee Jie Ying Jade
+ */
+
 #include "AMPMTimeFormatter.h"
 #include <iomanip>
 #include <sstream>
-
-// Purpose: Implements the 12-hour AM/PM formatter strategy.
 string AMPMTimeFormatter::format(int hour, int minute) const {
     string suffix = (hour >= 12) ? "PM" : "AM";
     int displayHour = hour % 12;

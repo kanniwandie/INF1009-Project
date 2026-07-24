@@ -1,3 +1,8 @@
+/**
+ * @file IMatchingStrategy.cpp
+ * @brief Implements the strategy-based matching algorithms for the routing system.
+ * @author Yap Hui Xin
+ */
 #include "IMatchingStrategy.h"
 #include "Passenger.h"
 #include "ShuttleVehicle.h"
@@ -16,11 +21,13 @@ int toMinutes(const Time& time) {
     return time.getHour() * 60 + time.getMinute();
 }
 
-// A shuttle may pick up a passenger group if it arrives no more than 10 minutes
-// before the passenger's requested time, and never after it (Application Requirement 5).
-// Minutes are treated on a circular 24-hour clock (mod 1440) so a shuttle at 11:59pm
-// correctly counts as a few minutes early for a passenger requesting 12:05am, since the
-// service day runs continuously from 6am to midnight without a hard reset at 00:00.
+/*
+ * A shuttle may pick up a passenger group if it arrives no more than 10 minutes
+ * before the passenger's requested time, and never after it (Application Requirement 5).
+ * Minutes are treated on a circular 24-hour clock (mod 1440) so a shuttle at 11:59pm
+ * correctly counts as a few minutes early for a passenger requesting 12:05am, since the
+ * service day runs continuously from 6am to midnight without a hard reset at 00:00.
+ */
 int getMinutesEarly(const Time& shuttleTime, const Time& passengerTime) {
     constexpr int MINUTES_PER_DAY = 24 * 60;
 
@@ -54,8 +61,10 @@ void MinimumDispatchStrategy::match(PassengerList& passengers, ShuttleList& shut
         }
     }
 
-    // Largest capacity first so each dispatched shuttle absorbs as many passenger
-    // groups as it can hold before another shuttle is used at all.
+    /*
+     * Largest capacity first so each dispatched shuttle absorbs as many passenger
+     * groups as it can hold before another shuttle is used at all.
+     */
     sort(candidates.begin(), candidates.end(), [](const ShuttleVehicle* a, const ShuttleVehicle* b) {
         int seatsA = a->getModel() ? a->getModel()->getMaxSeats() : 0;
         int seatsB = b->getModel() ? b->getModel()->getMaxSeats() : 0;
@@ -107,8 +116,10 @@ void EarliestArrivalStrategy::match(PassengerList& passengers, ShuttleList& shut
                 passenger.getScheduledTimeObject()
             );
 
-            // A larger value means an earlier arrival,
-            // while still being within the permitted 10 minutes.
+            /*
+             * A larger value means an earlier arrival,
+             * while still being within the permitted 10 minutes.
+             */
             if (!bestShuttle ||
                 candidateMinutesEarly > bestMinutesEarly) {
                 bestShuttle = &shuttle;

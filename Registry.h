@@ -1,3 +1,8 @@
+/**
+ * @file Registry.h
+ * @brief Provides generic and domain-specific registry containers for passengers and shuttles.
+ * @author Lee Yu Huan
+ */
 #ifndef REGISTRY_H
 #define REGISTRY_H
 
@@ -12,6 +17,10 @@ class ShuttleVehicle;
 // domain-agnostic - it knows nothing about passengers or shuttles specifically, only
 // that T has getID()/setAssignedStatus(). PassengerList/ShuttleList below compose one
 // of these rather than inheriting from it (see the note on those classes).
+/**
+ * @brief Generic in-memory collection that stores domain objects keyed by ID.
+ * @author Lee Yu Huan
+ */
 template <typename T>
 class Registry {
 private:
@@ -83,6 +92,10 @@ public:
 // Composition also means PassengerList is free to grow domain-specific behaviour later
 // without that behaviour leaking into the generic Registry template, and without a
 // consumer of PassengerList being able to slice it down to a bare Registry<Passenger>.
+/**
+ * @brief Domain-specific container for passenger objects.
+ * @author Lee Yu Huan
+ */
 class PassengerList {
 private:
     Registry<Passenger> registry;
@@ -103,6 +116,10 @@ public:
 
 // Purpose: The town's shuttle roster. See PassengerList above for the composition
 // rationale - the same reasoning applies here.
+/**
+ * @brief Domain-specific container for shuttle objects.
+ * @author Lee Yu Huan
+ */
 class ShuttleList {
 private:
     Registry<ShuttleVehicle> registry;
