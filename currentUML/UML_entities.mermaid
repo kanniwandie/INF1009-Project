@@ -132,7 +132,7 @@ classDiagram
     ShuttleModel <|-- FamilyShuttleModel
     ShuttleModel <|-- PremiumShuttleModel
 
-    ShuttleVehicle --> ShuttleModel
-    Entity --> Destination
-    Passenger --> PassengerID
-    ShuttleVehicle --> VehicleID
+    ShuttleVehicle *-- ShuttleModel
+    Entity *-- Destination
+    Passenger *-- PassengerID
+    ShuttleVehicle *-- VehicleID

@@ -104,23 +104,24 @@ classDiagram
         <<entity>>
     }
 
-    PassengerList --> Registry
-    ShuttleList --> Registry
+    PassengerList *-- Registry~T~
+    ShuttleList *-- Registry~T~
     PassengerList --> Passenger
     ShuttleList --> ShuttleVehicle
 
-    Schedule --> Entity
-    ScheduleRepository --> Schedule
+    Schedule --> Passenger
+    Schedule --> ShuttleVehicle
+    ScheduleRepository *-- Schedule
 
     IMatchingStrategy <|.. MinimumDispatchStrategy
     IMatchingStrategy <|.. EarliestArrivalStrategy
 
-    ScheduleMatcher --> IMatchingStrategy
+    ScheduleMatcher *-- IMatchingStrategy
     ScheduleMatcher --> PassengerList
     ScheduleMatcher --> ShuttleList
     ScheduleMatcher --> ScheduleRepository
 
-    SchedulingService --> ScheduleMatcher
-    SchedulingService --> ScheduleRepository
+    SchedulingService *-- ScheduleMatcher
+    SchedulingService *-- ScheduleRepository
     SchedulingService --> PassengerList
     SchedulingService --> ShuttleList

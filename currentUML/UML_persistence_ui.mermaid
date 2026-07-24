@@ -143,12 +143,12 @@ classDiagram
     ScheduleOutputHandler <|-- ConsolePrinter
     ScheduleOutputHandler <|-- TextFileFormatter
 
-    SystemDataService --> DataExporter
+    SystemDataService *-- DataExporter
     SystemDataService --> FileLoader
-    ScheduleManager --> PassengerList
-    ScheduleManager --> ShuttleList
-    ScheduleManager --> SystemDataService
-    ScheduleManager --> SchedulingService
+    ScheduleManager *-- PassengerList
+    ScheduleManager *-- ShuttleList
+    ScheduleManager *-- SystemDataService
+    ScheduleManager *-- SchedulingService
     MenuController --> ScheduleManager
     MenuController --> UserInputParser
     MenuController --> ScheduleOutputHandler

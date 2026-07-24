@@ -78,6 +78,10 @@ classDiagram
         <<abstract>>
     }
 
+    class DriverlessVehicle {
+        <<abstract>>
+    }
+
     class Passenger {
         <<entity>>
     }
@@ -90,10 +94,11 @@ classDiagram
     TimeFormatter <|-- AMPMTimeFormatter
     TimeFormatter <|-- ISOTimeFormatter
 
-    Time --> TimeFormatter
-    Entity --> Destination
-    Entity --> Time
-    Passenger --> PassengerID
-    ShuttleVehicle --> VehicleID
-    Passenger --> Entity
-    ShuttleVehicle --> Entity
+    Time *-- TimeFormatter
+    Entity *-- Destination
+    Entity *-- Time
+    Passenger *-- PassengerID
+    ShuttleVehicle *-- VehicleID
+    Entity <|-- Passenger
+    Entity <|-- DriverlessVehicle
+    DriverlessVehicle <|-- ShuttleVehicle

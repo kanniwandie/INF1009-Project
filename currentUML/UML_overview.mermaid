@@ -373,29 +373,34 @@ classDiagram
     FileLoader <|-- PassengerParser
     FileLoader <|-- ShuttleParser
 
-    Entity --> Destination
-    Entity --> Time
-    Passenger --> PassengerID
-    ShuttleVehicle --> VehicleID
-    ShuttleVehicle --> ShuttleModel
+    Entity *-- Destination
+    Entity *-- Time
+    Passenger *-- PassengerID
+    ShuttleVehicle *-- VehicleID
+    ShuttleVehicle *-- ShuttleModel
+    Time *-- TimeFormatter
 
-    PassengerList --> Registry
-    ShuttleList --> Registry
+    PassengerList *-- Registry
+    ShuttleList *-- Registry
+    ScheduleRepository *-- Schedule
+    ScheduleMatcher *-- IMatchingStrategy
+    SchedulingService *-- ScheduleMatcher
+    SchedulingService *-- ScheduleRepository
+    ScheduleManager *-- PassengerList
+    ScheduleManager *-- ShuttleList
+    ScheduleManager *-- SystemDataService
+    ScheduleManager *-- SchedulingService
+    SystemDataService *-- DataExporter
+
+    Schedule --> Passenger
+    Schedule --> ShuttleVehicle
     PassengerList --> Passenger
     ShuttleList --> ShuttleVehicle
-
-    Schedule --> Entity
-    ScheduleRepository --> Schedule
-    ScheduleMatcher --> IMatchingStrategy
-    SchedulingService --> ScheduleMatcher
-    SchedulingService --> ScheduleRepository
-    ScheduleManager --> PassengerList
-    ScheduleManager --> ShuttleList
-    ScheduleManager --> SystemDataService
-    ScheduleManager --> SchedulingService
-
-    SystemDataService --> DataExporter
-    SystemDataService --> FileLoader
+    ScheduleMatcher --> PassengerList
+    ScheduleMatcher --> ShuttleList
+    ScheduleMatcher --> ScheduleRepository
+    SchedulingService --> PassengerList
+    SchedulingService --> ShuttleList
     MenuController --> ScheduleManager
     MenuController --> UserInputParser
     MenuController --> ScheduleOutputHandler
